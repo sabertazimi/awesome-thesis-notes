@@ -374,4 +374,23 @@ the current release contains clean-slate libraries for TLS, TCP/IP, DNS, Xen net
 在大内存系统中, 传统的段页式虚存管理技术存在性能问题 (TLBs 的有限性能):
 
 *   由于 TLBs 不再能覆盖工作集 (working sets: 指活动频繁的页表集), 导致 TLB 缺失 (TLB misses) 急剧上升
-*   在传统内存层次中, 利用 TLBs 完成地址翻译后 (虚拟地址 -> 物理地址), 需要从 L1 Cache 开始进行缓存标签匹配, 查看所需内存数据是否已在缓存上。因此，随意地增大 TLB 的大小以降低 TLB 缺失的方法会影响到所有内存操作的性能
+*   在传统内存层次中, 利用 TLBs 完成地址翻译后 (虚拟地址 -> 物理地址), 需要从 L1 Cache 开始进行缓存标签匹配, 查看所需内存数据是否已在缓存上。因此，随意地增大 TLB 的大小以降低 TLB 缺失的方法会影响到所有内存操作的性能 (遍历 TLB 表耗时增大)
+
+### Old Methods
+
+*   superpaging: 使得每个页表项覆盖更大的内存; 但受限于架构, 页面大小最大为 1GB
+*   direct segment: 将一个进程所需的虚拟内存直接映射到一个大段中; 但不利用操作系统的动态内存分配
+
+### New Methods
+
+flexible virtual segmentation:
+
+*   its size is not tied to a fixed granularity mapping such as pages
+*   a single direct segment is too limited to be used to accommodate the dynamic memory usage of  general  systems
+*   provides the  benefit  of  direct  segment,  while  still  supporting  dynamic memory management by the operating system
+
+two key challenges:
+
+*   The address space of a process can be decomposed  into  many  chunks  of  variable  length  segments, which can be allocated dynamically
+*   address  translation  must be off the critical path: to support complicated many segment searches, address translation may take much longer compared to traditional fixed-sized page-based TLB lookups
+
