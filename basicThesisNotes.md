@@ -369,28 +369,81 @@ the current release contains clean-slate libraries for TLS, TCP/IP, DNS, Xen net
 
 # Memory Management
 
-## Virtual Segmentation
+## Redundant Memory Mappings (RMM)
+
+```cl
+V. Karakostas, J. Gandhi, F. Ayar, A. Cristal, M. D. Hill, K. S. McKinley, M. Nemirovsky, M. M. Swift, and O. Ünsal, “Redundant Memory Mappings for Fast Access to Large Memories,” in Proceedings of the 42Nd Annual International Symposium on Computer Architecture, New York, NY, USA, 2015, pp. 66–78
+```
 
 在大内存系统中, 传统的段页式虚存管理技术存在性能问题 (TLBs 的有限性能):
 
 *   由于 TLBs 不再能覆盖工作集 (working sets: 指活动频繁的页表集), 导致 TLB 缺失 (TLB misses) 急剧上升
-*   在传统内存层次中, 利用 TLBs 完成地址翻译后 (虚拟地址 -> 物理地址), 需要从 L1 Cache 开始进行缓存标签匹配, 查看所需内存数据是否已在缓存上。因此，随意地增大 TLB 的大小以降低 TLB 缺失的方法会影响到所有内存操作的性能 (遍历 TLB 表耗时增大)
+*   在传统内存层次中, 利用 TLBs 完成地址转换后 (虚拟地址 -> 物理地址), 需要从 L1 Cache 开始进行缓存标签匹配, 查看所需内存数据是否已在缓存上。因此，随意地增大 TLB 的大小以降低 TLB 缺失的方法会影响到所有内存操作的性能 (遍历 TLB 表耗时增大)
+
+The amount of memory accessible from the TLB or The working set of each process is stored in the TLB: 
+    TLB Reach = (TLB Size) X (Page Size)
 
 ### Old Methods
 
-*   superpaging: 使得每个页表项覆盖更大的内存; 但受限于架构, 页面大小最大为 1GB
+*   clustered TLBs/multipage mappings: mapping multiple pages per page table entry
+*   transparent huge pages/superpaging: 使得每个页表项覆盖更大的内存; 但受限于架构, 页面大小最大为 1GB
 *   direct segment: 将一个进程所需的虚拟内存直接映射到一个大段中; 但不利用操作系统的动态内存分配
 
+### multipage mapping
+
+*   pack multiple page table entries(PTEs) into a single TLB entry
+*   they pack only a small multiple of translations per entry, which limits their potential to reduce page-walks for large working sets
+
+### transparent huge pages
+
+*   memory should be size-aligned and contiguous
+*   many commodity processors provide limited numbers of large page TLB entries
+
+### direct segment
+
+*   applications explicitly allocate a direct segment during `startup`
+*   OS can reserve a single `large contiguous range` of physical memory for a segment
+
 ### New Methods
-
-flexible virtual segmentation:
-
-*   its size is not tied to a fixed granularity mapping such as pages
-*   a single direct segment is too limited to be used to accommodate the dynamic memory usage of  general  systems
-*   provides the  benefit  of  direct  segment,  while  still  supporting  dynamic memory management by the operating system
 
 two key challenges:
 
 *   The address space of a process can be decomposed  into  many  chunks  of  variable  length  segments, which can be allocated dynamically
 *   address  translation  must be off the critical path: to support complicated many segment searches, address translation may take much longer compared to traditional fixed-sized page-based TLB lookups
 
+changes:
+
+*   hardware: range TLB, CR-RT (Control Register - Range Translation)
+*   software: process creation, memory allocation, range table management
+
+### RMM Benefits
+
+*   `transparent` to applications
+*   maps multiple ranges with `no size-alignment restrictions`
+*   each range contains an `unrestricted amount of memory`
+*   RMM has the potential to map more than 99% of memory for all workloads with 50 or fewer range translations 
+*   the range TLB achieves extremely high hit rates, eliminating the vast majority of costly page-walks compared to virtual memory systems that use paging alone
+
+RMM performance depends on the range TLB achieving a high hit ratio with few entries
+
+### Range Translation
+
+Range translations are only base-page-aligned and redundant to paging: the page table still maps the entire virtual address space
+
+*   hardware: range TLBs
+*   software: range tables
+*   OS: change lazy demand page allocation to eager paging, `eager paging allocation`
+
+Eager paging instantiates pages in physical memory at `allocation request time`, rather than at `first-access time` as with demand paging
+
+### Range Table
+
+*   when miss: 及时填补 PTE 以使访存操作正常执行, 将 Range TLB 更新移出访存关键路径 (后台更新)
+*   PTE 加入 range bit: 表示当前页是某个 Range 的一部分, 及时更新 Range TLB 和 Range Table
+*   利用 CR-RT 寄存器进行 Range Table 查找: OS handler 可以进行 Range Table 查找, 以简化硬件设计
+*   修改 INVLPG 指令： 使其同时无效化 Range TLB
+
+### Contiguous Memory Allocation
+
+*   one motivation for demand paging was to limit unnecessary swapping in multiprogrammed workloads, which modern large memories make less common
+*   RMM trades increased memory for better performance, a common tradeoff when memory is cheap and plentiful
