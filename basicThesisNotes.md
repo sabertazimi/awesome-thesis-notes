@@ -369,6 +369,81 @@ the current release contains clean-slate libraries for TLS, TCP/IP, DNS, Xen net
 
 # Memory Management
 
+## Direct Segment
+
+```cl
+Basu A, Gandhi J, Chang J, et al. Efficient virtual memory for big memory servers[C]//Proceedings of the 40th Annual International Symposium on Computer Architecture. ACM, 2013: 237-248.
+```
+
+In light of the high cost of page-based virtual memory and its significant mismatch to “big-memory” application needs, we propose mapping part of a process’s linear virtual address with a direct segment rather than pages
+
+Mapping part of a process’s linear virtual address space with a direct segment, while page mapping the rest of the virtual address space:
+
+*   retains a standard linear virtual address space
+*   is not overlaid on top of paging
+*   coexists with paging of other virtual addresses
+*   a one-time fixed-cost solution for any size memory
+
+### Large Pages Shortcoming
+
+*   Being a cache, TLBs are reliant on memory-access locality to be effective and it can be a mismatch for future big-memory workloads with poor locality
+*   efficient TLB support for multiple page sizes is difficult
+*   large page sizes are often few and far apart (not enough for big-memory workload)
+
+### Big-memory workload analysis
+
+*   While address translation can be accelerated by TLB hits, misses are costly, taking up to 100s of cycles
+*   A sparse memory access pattern can result in more misses with fewer TLB entries
+
+For the majority of their address space, big-memory workloads do not require:
+
+*   swapping
+*   fragmentation mitigation
+*   fine-grained per-page protection
+
+*   Big-memory workloads pay a cost of pagebased virtual memory: substantial performance lost to TLB misses
+*   Big-memory workloads are long-running programs, receive little benefit from virtual memory optimizations whose primary goal is to allow quick program startup, such as demand paging
+*   Big-memory workloads cosume almost all memory resources, are sized to match memory capacity
+*   Big-memory workloads isolate from other services, have one (or a few) primary process(es)
+
+### Hardware Support
+
+direct segments add three registers per core as follows:
+
+*   BASE holds the start address of the contiguous virtual address range mapped through direct segment
+*   LIMIT holds the end address of the virtual address range mapped through direct segment
+*   OFFSET holds the start address of direct segment’s backing contiguous physical memory minus the value in BASE.
+
+Direct segments are aligned to the base page size, so page offset bits are omitted from these registers (e.g., 12 bits for 4KB pages)
+
+Without real direct-segment hardware, we emulate directsegment functionalities using 4KB pages
+
+More specifically, we modify Linux’s page fault handler so that on a page fault within the primary region it calculates the corresponding physical address from the faulting virtual page number
+
+If VAfault is the 4KB page-aligned virtual address of a faulting page, then our modified page-fault handler first checks if BASE ≤ VAfault < LIMIT. If so, the handler adds a mapping from VAfault to VAfault + OFFSET to the page table
+
+### Software Support
+
+The prototype implementation is simplified by assuming that only one process uses a direct segment at any time (called the primary process)
+
+*   A primary region is a contiguous range of virtual addresses in a process’s address space with uniform **read-write** access permission
+*   fine-grain protection, sparse allocation, swapping, and demand paging are not guaranteed for memory allocated within the primary region
+*   managing physical memory: create contiguous physical memory dynamically through periodic memory compaction
+*   managing direct-segment registers: When the OS dispatches a thread; it loads the BASE, LIMIT, and OFFSET values from the PCB
+*   Growing and shrinking direct segment (by updating direct-segment registers and page table entries)
+
+
+### Virtual Machines with direct-segment
+
+In a virtualized environment the memory accesses goes through two levels of address translations:
+
+1. guest virtual address (gVA) to guest physical address (gPA)
+2. guest physical address (gPA) to system physical address (sPA)
+
+### Results
+
+In x86-64, page table entries (PTEs) have a set of reserved bits (41-51 in our test platform) that cause a trap when loaded into the TLB
+
 ## Redundant Memory Mappings (RMM)
 
 ```cl
