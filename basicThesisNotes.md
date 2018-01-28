@@ -335,13 +335,64 @@ Unikernels do at compile time what standard programs do at runtime:
 *   The code for these low-level functions is compiled directly into the application executable through a library operating system
 *   library operating system: a special collection of libraries that provides needed operating system functions in a compilable format
 
-Security:
+### Security
 
 *   There is no command shell to leverage
 *   There are no utilities to co-opt
 *   There are no unused device drivers or unused libraries to attack
 *   There are no password files or authorization information present
 *   There are no connections to machines and databases not needed by the application
+
+### Debug
+
+Since there is no operating system environment on a unikernel production VM, there are no tools, no debuggers, no shell access with which someone can probe a failure on a deployed program
+
+Instead, all that can be done is to engineer the executable to log events and data so that the failure might be reconstructed on a development system, which still has access to all the debugging tools needed
+
+People in our industry have successfully debugged failures of complex software for years without direct access to production systems, and I see no reason why they will fail to do so now
+
+### Limits
+
+*   Single Process (but Multiple Threads)
+*   Single User
+*   Limited Debugging
+*   Impoverished Library Ecosystem
+
+### Ecosystem
+
+#### ClickOS
+
+network function virtualization (NFV) devices
+
+#### Rumprun
+
+compile most of the programs found on a Linux or Unix-like operating system as unikernels
+
+#### OSv
+
+It is unique among existing unikernels in that it provides a general-purpose unikernel base that can accept just about any program that can run in a single process (multiple threads are allowed, but multiple processes are not)
+
+As a result, OSv is a “fat” unikernel: the results are measured in megabytes, rather than kilobytes. 
+
+#### Mini-OS
+
+Mini-OS is a tiny OS kernel distributed with the Xen Project Hypervisor sources:
+
+*   used as operating system for stub domains that are used for Dom0 Disaggregation
+*   used as a basis for development of Unikernels, having been instrumental in the formation of multiple examples including ClickOS and Rump kernels
+
+#### Xen
+
+Its paravirtualization capabilities allow unikernels to have a very small and efficient footprint interfacing with devices.
+This is one reason why the Xen Project has been at the forefront of unikernel development. 
+
+Xen team has been consciously reworking the hypervisor’s capabilities so it can handle a future state where 2,000 or 3,000 simultaneous unikernel VMs may need to coexist on a single hardware host server.
+Currently, the hypervisor can handle about 1,000 unikernels simultaneously before scaling becomes nonlinear. The development work continues to improve unikernel support in each release.
+
+#### Unik
+
+*   UniK is an open source tool written in Go for compiling applications into unikernels and deploying those unikernels
+*   UniK utilizes a simple Docker-like command-line interface, making developing on unikernels as easy as developing on containers
 
 ## libOS
 
@@ -361,7 +412,6 @@ $ opam switch
 $ opam remote
 $ opam depext
 ```
-
 
 ## MirageOS
 
