@@ -415,14 +415,87 @@ $ opam depext
 
 ## MirageOS
 
-the current release contains clean-slate libraries for TLS, TCP/IP, DNS, Xen network and storage device drivers], HTTP, and other common Internet protocols
+*   **Unikernels**: specialised, sealed, singlepurpose libOS VMs that run directly on the hypervisor
+*   A libOS is structured very differently from a conventional OS: all services, from the scheduler to the device drivers to the network stack, are implemented as libraries linked directly with the application
+*    Coupled with the choice of a modern statically type-safe language for implementation, this affords configuration, performance and security benefits to unikernels
+*   the current release contains clean-slate libraries for TLS, TCP/IP, DNS, Xen network and storage device drivers], HTTP, and other common Internet protocols
+
+```cl
+Madhavapeddy A, Mortier R, Rotsos C, et al. Unikernels: Library operating systems for the cloud[C]//Proceedings of the 18th International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS). ACM, 2013: 461-472.
+```
+
+### Introduction
+
+We treat the final VM image as a single-purpose appliance rather than a general-purpose system by stripping away functionality at compile-time:
+
+*   the unikernel approach to providing sealed single-purpose appliances, particularly suitable for providing cloud services
+*   evaluation of a complete implementation of these techniques using a functional programming language (OCaml), showing that the benefits of type safety need not damage performance
+*   libraries and language extensions supporting systems programming in OCaml 
+
+The entire software stack of system libraries, language runtime, and applications is compiled into a single bootable VM image that runs directly on a standard hypervisor:
+
+*   (SOSP'95 Exokernel) By targeting a standard hypervisor, unikernels avoid the hardware compatibility problems encountered by traditional library OSs
+*   (ASPLOS'11 Drawbridge) By eschewing backward compatibility, unikernels address cloud services rather than desktop applications
+*   (EuroSys'06/07 Singularity) By targeting the commodity cloud with a library OS, unikernels can provide greater performance and improved security compared to Singularity
+*   (VEE'07 Libra) unikernels are more highly-specialised single-purpose appliance VMs that directly integrate communication protocols
+*   We find sacrificing source-level backward compatibility allows us to increase performance while significantly improving the security of external-facing cloud services
+*   We retain compatibility with external systems via standard network protocols such as TCP/IP
+
+Our key insight is that the hypervisor (SOSP'03 Xen) provides a virtual hardware abstraction that can be scaled dynamically – both vertically by adding memory and vCPUs, and horizontally by spawning more VMs, providing an excellent target for library operating systems (libOSs) (LibOSs have never been widely deployed due to the difficulty of supporting a sufficient range of real-world hardware)
+
+### Architecture
+
+*   Unikernels take a different approach, by integrating configuration into the compilation process, hence benefiting from static analysis tools and the compiler’s type-checker (OCaml), extensive dead-code elimination (**eliminate** unnecessary features from the final VM, **compactness** and reduce remote attack surface)
+*   unikernels use the hypervisor as the sole unit of isolation and let applications trust external entities via protocol libraries such as SSL or SSH
+*   eschew source-level **compatibility** (for performance): components communicate using type-safe, efficient implementations of standard network protocols; existing non-OCaml code can be encapsulated in separate VMs and communicated with via message-passing
+*   no longer requires userspace processes: the virtual address space can be simplified into a **single-address** space model
+*   completely preventing code injection attacks: as part of its startof-day initialisation, the unikernel establishes a set of page tables
+in which no page is both writable and executable (write XOR execute): This approach does mean that a running VM **cannot expand its heap**
+
+### Use of OCaml
+
+*   (ICFP'10) a full-fledged systems programming language with a flexible programming model that supports functional, imperative and object-oriented programming
+*   OCaml has a simple yet highperformance runtime making it an ideal platform for experimenting with the unikernel abstraction that interfaces the runtime with Xen
+*    static typing eliminates type information at compile-time while retaining all the benefits of type-safety
+*    (SOSP'03/11) the open-source Xen Cloud Platform and critical system components are
+implemented in OCaml, making integration straightforward
+
+### PVBoot Library
+
+PVBoot provides start-of-day support to initialise a VM with one virtual CPU and Xen event channels, and jump to an **entry function**
+
+PVBoot provides two memory page allocators, one slab and one extent:
+
+*   The slab allocator is used to support the C code in the runtime
+*   The extent allocator reserves a contiguous area of virtual memory which it manipulates in 2MB chunks (permitting the mapping of x86 64 superpages)
+*   Memory regions are statically assigned roles, e.g., the garbage collected heap or I/O data pages
+
+### Heap Management and Concurrency (Language Runtime)
+
+*   The text and data segments contain the OCaml runtime, linked against PVBoot: this is the only address space available in the kernel
+*    a normal userspace garbage collector maintains a page table to track allocated heap chunks
+*   Mirage unikernels avoid ASR at runtime, and guarantee a **contiguous
+virtual address space**, simplifying runtime memory management
+*   (ML'08 Lwt) Mirage integrates the Lwt cooperative threading library
+
+#### Thread Flow
+
+*   The application’s main thread is launched immediately after boot and the VM shuts down when it returns
+*   Mirage provides an evaluator that uses domainpoll to listen for events and wake up lightweight threads. The VM is thus either executing OCaml code or blocked, with no internal preemption or asynchronous interrupts
+*   The main thread repeatedly executes until it completes or throws an exception, and the domain subsequently shuts down with the VM exit code matching the thread return value
+
+### Device Drivers
+
+Data arrives to both the network and storage stacks as a stream of discrete packets. Mirage bridges the gap between packets and streams by using channel iteratees that map functions over infinite streams of packets to produce a typed stream
+
+### I/O Stack
 
 # Memory Management
 
 ## Direct Segment
 
 ```cl
-Basu A, Gandhi J, Chang J, et al. Efficient virtual memory for big memory servers[C]//Proceedings of the 40th Annual International Symposium on Computer Architecture. ACM, 2013: 237-248.
+Basu A, Gandhi J, Chang J, et al. Efficient virtual memory for big memory servers[C]//Proceedings of the 40th Annual International Symposium on Computer Architecture (ISCA). ACM, 2013: 237-248.
 ```
 
 In light of the high cost of page-based virtual memory and its significant mismatch to “big-memory” application needs, we propose mapping part of a process’s linear virtual address with a direct segment rather than pages
@@ -497,7 +570,7 @@ In x86-64, page table entries (PTEs) have a set of reserved bits (41-51 in our t
 ## Redundant Memory Mappings (RMM)
 
 ```cl
-V. Karakostas, J. Gandhi, F. Ayar, A. Cristal, M. D. Hill, K. S. McKinley, M. Nemirovsky, M. M. Swift, and O. Ünsal, “Redundant Memory Mappings for Fast Access to Large Memories,” in Proceedings of the 42Nd Annual International Symposium on Computer Architecture, New York, NY, USA, 2015, pp. 66–78
+V. Karakostas, J. Gandhi, F. Ayar, A. Cristal, M. D. Hill, K. S. McKinley, M. Nemirovsky, M. M. Swift, and O. Ünsal, “Redundant Memory Mappings for Fast Access to Large Memories,” in Proceedings of the 42Nd Annual International Symposium on Computer Architecture (ISCA), New York, NY, USA, 2015, pp. 66–78
 ```
 
 在大内存系统中, 传统的段页式虚存管理技术存在性能问题 (TLBs 的有限性能):
