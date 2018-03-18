@@ -424,6 +424,28 @@ $ opam depext
 Madhavapeddy A, Mortier R, Rotsos C, et al. Unikernels: Library operating systems for the cloud[C]//Proceedings of the 18th International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS). ACM, 2013: 461-472.
 ```
 
+### Installation
+
+```sh
+opam init
+opam remote
+ocaml -version
+opam switch 4.04.2
+eval `opam config env`
+opam list
+opam install mirage
+```
+
+```sh
+mirage --help
+mirage configure --xen
+make depend
+make
+sudo xl create -c console.xl
+strip console.xen
+bzip2 -9 console.xen
+```
+
 ### Introduction
 
 We treat the final VM image as a single-purpose appliance rather than a general-purpose system by stripping away functionality at compile-time:
@@ -645,3 +667,5 @@ Eager paging instantiates pages in physical memory at `allocation request time`,
 
 *   one motivation for demand paging was to limit unnecessary swapping in multiprogrammed workloads, which modern large memories make less common
 *   RMM trades increased memory for better performance, a common tradeoff when memory is cheap and plentiful
+
+
