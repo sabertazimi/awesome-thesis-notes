@@ -446,6 +446,12 @@ strip console.xen
 bzip2 -9 console.xen
 ```
 
+### Development
+
+```sh
+$ opam source repo.name --dev-repo --pin
+```
+
 ### Introduction
 
 We treat the final VM image as a single-purpose appliance rather than a general-purpose system by stripping away functionality at compile-time:
