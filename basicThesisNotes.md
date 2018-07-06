@@ -505,15 +505,19 @@ $ opam remote
 $ opam depext
 ```
 
-## MirageOS
+## MirageOS (Exokernel -> Library Operating System -> Unikernel)
 
 *   **Unikernels**: specialised, sealed, singlepurpose libOS VMs that run directly on the hypervisor
 *   A libOS is structured very differently from a conventional OS: all services, from the scheduler to the device drivers to the network stack, are implemented as libraries linked directly with the application
 *    Coupled with the choice of a modern statically type-safe language for implementation, this affords configuration, performance and security benefits to unikernels
 *   the current release contains clean-slate libraries for TLS, TCP/IP, DNS, Xen network and storage device drivers], HTTP, and other common Internet protocols
 
-```cl
-Madhavapeddy A, Mortier R, Rotsos C, et al. Unikernels: Library operating systems for the cloud[C]//Proceedings of the 18th International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS). ACM, 2013: 461-472.
+```refer
+Madhavapeddy A, Mortier R, Sohan R, et al. Turning Down the LAMP: Software Specialisation for the Cloud[C]//Proceedings of the 2nd USENIX conference on Hot topics in cloud computing (HotCloud). USENIX Association, Boston, USA, 2010.
+```
+
+```refer
+Madhavapeddy A, Mortier R, Rotsos C, et al. Unikernels: Library operating systems for the cloud[C]//Proceedings of the 18th International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS). ACM, Houston, USA, 2013: 461-472.
 ```
 
 ### Installation
@@ -546,6 +550,8 @@ $ opam source repo.name --dev-repo --pin
 
 ### Introduction
 
+Mirage focusses on the domain of I/O intensive cloud servers
+
 We treat the final VM image as a single-purpose appliance rather than a general-purpose system by stripping away functionality at compile-time:
 
 *   the unikernel approach to providing sealed single-purpose appliances, particularly suitable for providing cloud services
@@ -555,6 +561,7 @@ We treat the final VM image as a single-purpose appliance rather than a general-
 The entire software stack of system libraries, language runtime, and applications is compiled into a single bootable VM image that runs directly on a standard hypervisor:
 
 *   (SOSP'95 Exokernel) By targeting a standard hypervisor, unikernels avoid the hardware compatibility problems encountered by traditional library OSs
+*   (SOSP'97 Flux OSKit) provided as a series of component libraries
 *   (ASPLOS'11 Drawbridge) By eschewing backward compatibility, unikernels address cloud services rather than desktop applications
 *   (EuroSys'06/07 Singularity) By targeting the commodity cloud with a library OS, unikernels can provide greater performance and improved security compared to Singularity
 *   (VEE'07 Libra) unikernels are more highly-specialised single-purpose appliance VMs that directly integrate communication protocols
@@ -569,16 +576,17 @@ Our key insight is that the hypervisor (SOSP'03 Xen) provides a virtual hardware
 *   unikernels use the hypervisor as the sole unit of isolation and let applications trust external entities via protocol libraries such as SSL or SSH
 *   eschew source-level **compatibility** (for performance): components communicate using type-safe, efficient implementations of standard network protocols; existing non-OCaml code can be encapsulated in separate VMs and communicated with via message-passing
 *   no longer requires userspace processes: the virtual address space can be simplified into a **single-address** space model
-*   completely preventing code injection attacks: as part of its startof-day initialisation, the unikernel establishes a set of page tables
-in which no page is both writable and executable (write XOR execute): This approach does mean that a running VM **cannot expand its heap**
+*   completely preventing code injection attacks: as part of its startof-day initialisation, the unikernel establishes a set of page tables in which no page is both writable and executable (write XOR execute): This approach does mean that a running VM **cannot expand its heap**
+*   We do not modify the OCaml compiler itself, but rather the runtime libraries it provides to interface with the OS. This code is mostly written in C, and includes the **garbage collector** and **memory allocator**
 
 ### Use of OCaml
 
+OCaml is a pragmatic system that strikes a balance between imperative languages, e.g., C, and pure functional languages, e.g., Haskell. It features type inference, algebraic data types, and higher-order functions, but also permits references and mutable data structures while guaranteeing that all such side-effects are always typesafe and will never cause memory corruption
+
 *   (ICFP'10) a full-fledged systems programming language with a flexible programming model that supports functional, imperative and object-oriented programming
-*   OCaml has a simple yet highperformance runtime making it an ideal platform for experimenting with the unikernel abstraction that interfaces the runtime with Xen
-*    static typing eliminates type information at compile-time while retaining all the benefits of type-safety
-*    (SOSP'03/11) the open-source Xen Cloud Platform and critical system components are
-implemented in OCaml, making integration straightforward
+*   OCaml has a simple yet high performance runtime making it an ideal platform for experimenting with the unikernel abstraction that interfaces the runtime with Xen
+*   static typing eliminates type information at compile-time while retaining all the benefits of type-safety (remove dynamic typing overheads and introduce more safety at compile time)
+*   (SOSP'03/11) the open-source Xen Cloud Platform and critical system components are implemented in OCaml, making integration straightforward
 
 ### PVBoot Library
 
@@ -598,11 +606,22 @@ PVBoot provides two memory page allocators, one slab and one extent:
 virtual address space**, simplifying runtime memory management
 *   (ML'08 Lwt) Mirage integrates the Lwt cooperative threading library
 
+Statically mapping virtual memory provides Mirage with a significant speed boost. Under normal kernels, the standard OCaml garbage collector cannot guarantee that its address space is contiguous in virtual memory and maintains a page table to track the allocated heap regions. In tight allocation loops, the pagetable lookup can take around 15% of CPU time, an overhead which disappears in Mirage.
+
+#### Concurrency
+
+*   lightweight control-flow threads for managing I/O and timeouts
+*   optimised inter-VM communication for parallel computation
+
+Each Mirage instance runs as on a single CPU core. Communication is optimised dynamically: if the VMs are running on the same physical machine, Mirage uses shared memory channels instead of the network stack
+
 #### Thread Flow
 
 *   The application’s main thread is launched immediately after boot and the VM shuts down when it returns
 *   Mirage provides an evaluator that uses domainpoll to listen for events and wake up lightweight threads. The VM is thus either executing OCaml code or blocked, with no internal preemption or asynchronous interrupts
 *   The main thread repeatedly executes until it completes or throws an exception, and the domain subsequently shuts down with the VM exit code matching the thread return value
+
+Xen protects its own memory using page-level checks and runs both the guest kernel and userspace in ring 3. This makes system calls and page table manipulation relatively slow, a problem which Mirage avoids by **not context-switching in ring 3** (Single Process)
 
 ### Device Drivers
 
@@ -610,12 +629,30 @@ Data arrives to both the network and storage stacks as a stream of discrete pack
 
 ### I/O Stack
 
+Mirage implements a Xen blkfront VFS which interacts directly with a block device without an intervening filesystem
+
+# Xen
+
+## Xen Soft Device
+
+```refer
+Warfield A, Hand S, Fraser K, et al. Facilitating the Development of Soft Devices[C]//Proceedings of the 2005 USENIX Annual Technical Conference (ATC). USENIX, Anaheim, CA, USA, 2005: 379-382.
+```
+
+Device-level interfaces in operating systems present a very useful cut-point for researchers to experiment with new ideas. By virtualizing these interfaces, developers can create soft devices, which are used in the same way as normal hardware devices, but provide extra functionality in software
+
+Rather than attempting to present a fully virtualized hardware interface to each OS in a Xen environment, guest OSes are modified to use a simple, narrow and idealized view of hardware. Soft devices take advantage of these narrow interface to capture and transform block requests, network packets, and USB messages
+
+### Device Access in Xen
+
+Physical driver runs in an isolated VM, connected over a shared memory device channel to a guest VM accessing the device. Operating systems wishing to access the device will use a front-end driver, and interact with the back-end driver over a device channel, which is a shared-memory communications primitive (原语)
+
 # Memory Management
 
 ## Direct Segment
 
-```cl
-Basu A, Gandhi J, Chang J, et al. Efficient virtual memory for big memory servers[C]//Proceedings of the 40th Annual International Symposium on Computer Architecture (ISCA). ACM, 2013: 237-248.
+```refer
+Basu A, Gandhi J, Chang J, et al. Efficient virtual memory for big memory servers[C]//Proceedings of the 40th Annual International Symposium on Computer Architecture (ISCA). ACM, Tel-Aviv, Israel, 2013: 237-248.
 ```
 
 In light of the high cost of page-based virtual memory and its significant mismatch to “big-memory” application needs, we propose mapping part of a process’s linear virtual address with a direct segment rather than pages
@@ -689,8 +726,8 @@ In x86-64, page table entries (PTEs) have a set of reserved bits (41-51 in our t
 
 ## Redundant Memory Mappings (RMM)
 
-```cl
-V. Karakostas, J. Gandhi, F. Ayar, A. Cristal, M. D. Hill, K. S. McKinley, M. Nemirovsky, M. M. Swift, and O. Ünsal, “Redundant Memory Mappings for Fast Access to Large Memories,” in Proceedings of the 42Nd Annual International Symposium on Computer Architecture (ISCA), New York, NY, USA, 2015, pp. 66–78
+```refer
+Karakostas V, Gandhi J, Ayar F, et al. Redundant Memory Mappings for Fast Access to Large Memories[C]//Proceedings of the 42nd Annual International Symposium on Computer Architecture (ISCA). ACM, Portland, USA, 2015: 66–78.
 ```
 
 在大内存系统中, 传统的段页式虚存管理技术存在性能问题 (TLBs 的有限性能):
