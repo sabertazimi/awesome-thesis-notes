@@ -169,7 +169,7 @@
 
 ## Google File System
 
-```refer
+```latex
 Ghemawat S, Gobioff H, Leung S T. The Google file system[C]//Proceedings of the Twenty-Fourth ACM Symposium on Operating Systems Principles. ACM, 2003, 37(5): 29-43.
 ```
 
@@ -293,7 +293,7 @@ Master 节点基本工作:
 
 ## MapReduce
 
-```refer
+```latex
 Dean J, Ghemawat S. MapReduce: simplified data processing on large clusters[C]//Proceedings of the 6th symposium on Operating systems design and implementation. USENIX Association, 2004: 137-149.
 ```
 
@@ -326,7 +326,7 @@ MapReduce 调用才返回。
 
 ## Google Bigtable
 
-```refer
+```latex
 Chang F, Dean J, Ghemawat S, et al. Bigtable: A Distributed Storage System for Structured Data[C]//Proceedings of the 7th symposium on Operating systems design and implementation. USENIX Association, 2006: 205-218.
 ```
 
@@ -417,7 +417,7 @@ SELinux: 在一个开启了 SELinux 的内核中, 可能存在 10 万条以上�
 
 ## Unikernels
 
-```refer
+```latex
 Pavlicek R C. Unikernels: beyond containers to the next generation of cloud[M]. " O'Reilly Media, Inc.", 2017.
 ```
 
@@ -512,11 +512,11 @@ $ opam depext
 *    Coupled with the choice of a modern statically type-safe language for implementation, this affords configuration, performance and security benefits to unikernels
 *   the current release contains clean-slate libraries for TLS, TCP/IP, DNS, Xen network and storage device drivers], HTTP, and other common Internet protocols
 
-```refer
+```latex
 Madhavapeddy A, Mortier R, Sohan R, et al. Turning Down the LAMP: Software Specialisation for the Cloud[C]//Proceedings of the 2nd USENIX conference on Hot topics in cloud computing (HotCloud). USENIX Association, Boston, USA, 2010.
 ```
 
-```refer
+```latex
 Madhavapeddy A, Mortier R, Rotsos C, et al. Unikernels: Library operating systems for the cloud[C]//Proceedings of the 18th International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS). ACM, Houston, USA, 2013: 461-472.
 ```
 
@@ -635,7 +635,7 @@ Mirage implements a Xen blkfront VFS which interacts directly with a block devic
 
 ## Xen Soft Device
 
-```refer
+```latex
 Warfield A, Hand S, Fraser K, et al. Facilitating the Development of Soft Devices[C]//Proceedings of the 2005 USENIX Annual Technical Conference (ATC). USENIX, Anaheim, CA, USA, 2005: 379-382.
 ```
 
@@ -651,7 +651,7 @@ Physical driver runs in an isolated VM, connected over a shared memory device ch
 
 ## Direct Segment
 
-```refer
+```latex
 Basu A, Gandhi J, Chang J, et al. Efficient virtual memory for big memory servers[C]//Proceedings of the 40th Annual International Symposium on Computer Architecture (ISCA). ACM, Tel-Aviv, Israel, 2013: 237-248.
 ```
 
@@ -726,7 +726,7 @@ In x86-64, page table entries (PTEs) have a set of reserved bits (41-51 in our t
 
 ## Redundant Memory Mappings (RMM)
 
-```refer
+```latex
 Karakostas V, Gandhi J, Ayar F, et al. Redundant Memory Mappings for Fast Access to Large Memories[C]//Proceedings of the 42nd Annual International Symposium on Computer Architecture (ISCA). ACM, Portland, USA, 2015: 66–78.
 ```
 
