@@ -1,7 +1,7 @@
 {
     "links": {
         "sidebar": {
-            "Awesome Thesis Notes": "https:github.com/sabertazimi/awesome-thesis-notes"
+            "Awesome Thesis Notes": "https://github.com/sabertazimi/awesome-thesis-notes"
         }
     },
     "plugins": [
@@ -29,15 +29,19 @@
             ]
         },
         "github-buttons": {
-            "buttons": [
-                {
-                    "user": "sabertazimi",
-                    "repo": "awesome-thesis-notes",
-                    "type": "star",
-                    "size": "small",
-                    "count": true
-                }
-            ]
+            "buttons": [{
+                "user": "sabertazimi",
+                "repo": "awesome-thesis-notes",
+                "type": "star",
+                "size": "small",
+                "count": true
+            }]
         }
-    }
+    },
+    "ignores": [
+        ".*",
+        "_book",
+        "gitbook",
+        "node_modules"
+    ]
 }
