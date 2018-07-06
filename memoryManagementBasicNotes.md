@@ -1,3 +1,17 @@
+<!-- TOC -->
+
+- [Memory Management Basic Notes](#memory-management-basic-notes)
+    - [Tools](#tools)
+        - [perf](#perf)
+        - [trace](#trace)
+        - [vmstat](#vmstat)
+        - [pmap](#pmap)
+        - [Memory Hotplug](#memory-hotplug)
+        - [TCMalloc](#tcmalloc)
+        - [Oprofile](#oprofile)
+
+<!-- /TOC -->
+
 # Memory Management Basic Notes
 
 ## Tools
