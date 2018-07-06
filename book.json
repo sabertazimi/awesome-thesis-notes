@@ -8,14 +8,16 @@
         "-lunr",
         "-search",
         "search-plus",
+        "splitter",
         "anchors",
         "theme-comscore",
         "tbfed-pagefooter",
         "prism",
         "-highlight",
-        "-sharing",
         "alerts",
-        "github-buttons"
+        "github-buttons",
+        "edit-link",
+        "disqus"
     ],
     "pluginsConfig": {
         "tbfed-pagefooter": {
@@ -36,6 +38,18 @@
                 "size": "small",
                 "count": true
             }]
+        },
+        "edit-link": {
+            "base": "https://github.com/sabertazimi/awesome-thesis-notes/edit/master",
+            "label": "Edit This Page"
+        },
+        "sharing": {
+            "facebook": false,
+            "twitter": true,
+            "weibo": true
+        },
+        "disqus": {
+            "shortName": "gitbook-8"
         }
     },
     "ignores": [
