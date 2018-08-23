@@ -16,6 +16,7 @@
     - [Selective Scheduling](#selective-scheduling)
     - [2-Level Hierarchical Partitioning](#2-level-hierarchical-partitioning)
     - [GridGraph Shortcoming](#gridgraph-shortcoming)
+  - [Dataset](#dataset)
 
 <!-- /TOC -->
 
@@ -95,3 +96,9 @@
 ### GridGraph Shortcoming
 
 - 折线式的边 block 遍历策略不能达到最大化的Cache/Memory命中率
+
+## Dataset
+
+- [LiveJournal social network](http://snap.stanford.edu/data/soc-LiveJournal1.html)
+- [twitter rv](http://an.kaist.ac.kr/traces/WWW2010.html)
+- [us road](http://www.dis.uniroma1.it/challenge9/download.shtml)
