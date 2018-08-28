@@ -23,6 +23,9 @@
   - [Tools](#tools)
     - [GCC](#gcc)
       - [strict-alias warnings](#strict-alias-warnings)
+    - [Time Stamp Counter](#time-stamp-counter)
+      - [RDTSC](#rdtsc)
+      - [clock_gettime](#clock_gettime)
     - [NUMA Tool](#numa-tool)
       - [numactl](#numactl)
         - [installation](#installation)
@@ -151,6 +154,26 @@ for strict-aliasing warnings:
 2. use a reinterpret_cast, cast via `char *` at the point where reinterpret the memory - `char *` are defined as being able to alias anything
 3. use a type which has `__attribute__((__may_alias__))`
 4. turn off the aliasing assumptions globally using -fno-strict-aliasing
+
+### Time Stamp Counter
+
+- [definition](http://en.wikipedia.org/wiki/Time_Stamp_Counter)
+
+#### RDTSC
+
+#### clock_gettime
+
+```bash
+gcc *.c -o *.o ... -lrt # link with librt
+```
+
+```c
+#include <time.h>
+
+struct timespec ts;
+clock_gettime(CLOCK_MONOTONIC, ts);
+printf("%d %d", ts.tv_sec, ts.tv_nsec);
+```
 
 ### NUMA Tool
 
