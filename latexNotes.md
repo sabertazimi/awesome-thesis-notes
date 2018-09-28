@@ -15,3 +15,8 @@ export INFOPATH=${INFOPATH}:/usr/local/texlive/2018/texmf-dist/doc/info
 export PATH=${PATH}:/usr/local/texlive/2018/bin/x86_64-linux
 ```
 
+## Math
+
+### Symbol
+
+http://ctan.math.illinois.edu/info/symbols/comprehensive/symbols-a4.pdf
