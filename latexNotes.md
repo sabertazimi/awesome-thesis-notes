@@ -15,8 +15,13 @@ export INFOPATH=${INFOPATH}:/usr/local/texlive/2018/texmf-dist/doc/info
 export PATH=${PATH}:/usr/local/texlive/2018/bin/x86_64-linux
 ```
 
+## Basis
+
+[Writing Scientific Documents Using LATEX](ftp://ftp.dante.de/tex-archive/info/intro-scientific/scidoc.pdf)
+
 ## Math
 
 ### Symbol
 
-http://ctan.math.illinois.edu/info/symbols/comprehensive/symbols-a4.pdf
+[The Comprehensive LATEX Symbol List](http://ctan.math.illinois.edu/info/symbols/comprehensive/symbols-a4.pdf)
+
