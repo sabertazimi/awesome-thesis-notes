@@ -70,6 +70,15 @@ clean:
 
 - [The Comprehensive LATEX Symbol List](http://tug.ctan.org/info/symbols/comprehensive/symbols-a4.pdf)
 
+```latex
+$ \gamma \delta \sigma \phi \psi \rho \mu \pi $
+$ \sim \in $
+$ \geq \leq $
+$ \infty $
+$ \rightarrow $
+$ \surd \sqrt{2} \frac{x}{y} $
+```
+
 ## template
 
 ```latex
