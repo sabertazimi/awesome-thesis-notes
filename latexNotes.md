@@ -23,11 +23,34 @@ export PATH=${PATH}:/usr/local/texlive/2018/bin/x86_64-linux
 - [Writing Scientific Documents Using LATEX](ftp://ftp.dante.de/tex-archive/info/intro-scientific/scidoc.pdf)
 - [Haiyang Liu's Tutorial](https://github.com/wuzhouhui/misc/blob/master/LaTeX%E5%85%A5%E9%97%A8%20%E5%88%98%E6%B5%B7%E6%B4%8B.pdf)
 
+### Layout
+
+```latex
+\footnote{}
+\emph{}
+\raggedright
+\centering
+\raggedleft
+```
+
+#### Page Size
+
+```latex
+\usepackage[left=1cm,right=1cm,top=2cm,bottom=3cm]{geometry}
+```
+
+#### Font Size
+
+```latex
+\zihao{0}  % 初号
+\zihao{-6} % 小六
+```
+
 ## Math
 
 ### Symbol
 
-[The Comprehensive LATEX Symbol List](http://ctan.math.illinois.edu/info/symbols/comprehensive/symbols-a4.pdf)
+- [The Comprehensive LATEX Symbol List](http://tug.ctan.org/info/symbols/comprehensive/symbols-a4.pdf)
 
 ## template
 
