@@ -1,6 +1,8 @@
 # Latex Basic Notes
 
-## Installation
+## Workflow
+
+### Installation
 
 [Installation Tutorial](https://liam0205.me/texlive)
 
@@ -15,6 +17,22 @@ sudo umount /mnt/iso
 export MANPATH=${MANPATH}:/usr/local/texlive/2018/texmf-dist/doc/man
 export INFOPATH=${INFOPATH}:/usr/local/texlive/2018/texmf-dist/doc/info
 export PATH=${PATH}:/usr/local/texlive/2018/bin/x86_64-linux
+```
+
+### Build Script
+
+```makefile
+filename=main
+
+pdf:
+	pdflatex -synctex=1 -shell-escape -interaction=nonstopmode ${filename}.tex
+	bibtex ${filename}
+	pdflatex -synctex=1 -shell-escape -interaction=nonstopmode ${filename}.tex
+  pdflatex -synctex=1 -shell-escape -interaction=nonstopmode ${filename}.tex
+
+clean:
+	rm -f ${filename}.{ps,pdf,log,aux,out,dvi,bbl,blg,synctex.gz,toc,bcf,run.xml,tex.bbl,tex.blg}
+	rm -f ${filename}-blx.bib
 ```
 
 ## Basis
