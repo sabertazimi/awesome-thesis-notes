@@ -214,3 +214,13 @@ clean:
 \setCJKfamilyfont{akai}{Adobe Kaiti Std}                            %Adobe 楷体  akai
 \newcommand{\akai}{\CJKfamily{akai}}
 ```
+
+## Tools
+
+### PDF to Tex
+
+```bash
+sudo apt install abiword
+abiword --to=tex a.pdf
+```
+
