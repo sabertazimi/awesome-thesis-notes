@@ -66,6 +66,8 @@ clean:
 
 ## Math
 
+[Typeset Equations](http://moser-isi.ethz.ch/docs/typeset_equations.pdf)
+
 ### Symbol
 
 - [The Comprehensive LATEX Symbol List](http://tug.ctan.org/info/symbols/comprehensive/symbols-a4.pdf)
