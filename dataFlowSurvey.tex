@@ -5,6 +5,7 @@
 
 % layout
 \usepackage[left=3cm,right=3cm]{geometry}
+\usepackage{paralist} % for compactitem environment
 \linespread{1.25}
 % \makeatletter
 % \def\@seccntformat#1{%
@@ -127,8 +128,67 @@ or (at least conceptually) the executability
 and execution of instructions is solely determined
 based on the availability of input arguments to the instructions,
 so that the order of instruction execution is unpredictable.
+Dataflow architectures that are deterministic in nature
+enable programmers to manage complex tasks
+such as processor load balancing, synchronization and accesses to common resources.
+
+The research, however, never overcame the problems related to:
+\begin{compactitem}
+  \item Efficiently broadcasting data tokens in a massively parallel system;
+  \item Efficiently dispatching instruction tokens in a massively parallel system;
+  \item Building CAMs large enough to hold all of the dependencies of a real program.
+\end{compactitem}
+Instructions and their data dependencies proved to be too fine-grained to be effectively distributed in a large network.
+That is, the time for the instructions and tagged results to \textbf{travel} through a large connection network
+was longer than the time to actually do the \textbf{computations}.
+
+Designs that use conventional memory addresses as data dependency tags are called static dataflow machines.
+These machines did not allow multiple instances of the same routines to be executed simultaneously
+because the simple tags could not differentiate between them.
+Designs that use content-addressable memory (CAM) or dynamic tagging are called dynamic dataflow machines.
+They use tags in memory to facilitate \textbf{parallelism}.
+
+\subsection{Computation Organization}
+Mentioned in section~\ref{sec:dataflow_arch}.
+
+Since a data-flow computer needs to record
+the large set of potentially executable instructions,
+it is difficult to conceive of supporting
+data flow with a centralized machine organization.
+Therefore proceed to support \textbf{packet communication}.
+
+\subsection{Program Organization}
+
+Programs are loaded into the CAM of a dynamic dataflow computer.
+When all of the tagged operands of an instruction become available (that is, output from previous instructions and/or user input),
+the instruction is marked as ready for execution by an execution unit.
+This is known as activating or firing the instruction.
+Once an instruction is completed by an execution unit,
+its output data is sent (with its tag) to the CAM.
+Any instructions that are dependent upon this particular datum (identified by its tag value)
+are then marked as ready for execution.
+In this way, subsequent instructions are executed in proper order, avoiding race conditions.
+This order may differ from the sequential order envisioned by the human programmer, the programmed order.
+
+An instruction, along with its required data operands,
+is transmitted to an execution unit as a packet, also called an instruction token.
+Similarly, output data is transmitted back to the CAM as a data token.
+The packetization of instructions and results allows for parallel execution of ready instructions on a large scale.
+
+The basic format of a reference (destination of data tokens) is $(P, N, A)$
+and the fields are used for the following:
+\begin{compactitem}
+  \item The process (P) field distinguishes separate instances
+        of an instruction N that may be executing in parallel,
+        either within a single program or within distinct programs;
+  \item The instruction (N) field identifies the consuming instruction
+        to which the data token is being passed;
+  \item The argument (A) field identifies in which
+        argument position in the instruction N the token is to be stored. 
+\end{compactitem}
 
 \section{Dataflow Architecture}
+\label{sec:dataflow_arch}
 Survey of basic dataflow architecture.
 
 Dennis~\cite{DBLP:conf/isca/DennisM74} proposed ``The Elementary Processor'',
@@ -141,7 +201,7 @@ The result of an operation leaves an Operation Unit
 as one or more data packet,
 consisting of the computed value and the address of a register
 in the Memory to which the value is to be delivered.
-The Dist£ibution Network accepts data packets
+The Distribution Network accepts data packets
 from the Operation Units and utilizes the address of each
 to direct the data item through the network to the correct register in the Memory.
 The Instruction Cell containing that register may then be enabled
@@ -158,6 +218,40 @@ if an instruction and all operands are present in the Cell.
 \end{figure}
 
 Treleaven had a survey of dataflow architecture~\cite{DBLP:journals/csur/TreleavenBH82}.
+Data flow is based on a by-value data mechanism
+and a parallel control mechanism, supported by data tokens. 
+
+The Manchester prototype dataflow computer~\cite{DBLP:journals/cacm/GurdKW85} proposed
+a powerful dataflow processing engine based on dynamic tagging.
+Instructions do not reference memory, since the data-dependence arcs
+allow data to be transmitted directly from generating instruction to subsequent instruction.
+Consequently, instructions can be viewed as \textbf{pure operations}.
+Individual systems differ mainly in the way they handle re-entrant code.
+Static systems do not permit concurrent reactivation,
+and so they are restricted to implementing loops and cannot accommodate recursion.
+Dynamic systems permit recursive reactivation,
+either by code-copying or tagging, at every occurrence of re-entry.
+
+The MIT tagged-token dataflow architecture~\cite{DBLP:journals/tc/ArvindN90} proposed
+a novel multiprocessor dataflow architecture.
+A traditional von Neumann processor has fundamental characteristics
+that reduce its effectiveness in a parallel machine:
+\begin{compactitem}
+  \item its performance suffers in the presence of long memory and communication latencies;
+  \item they do not provide good synchronization mechanisms
+        for frequent task switching between parallel activities;
+  \item it is a significant added complication for the programmer to manage parallelism explicitly.
+\end{compactitem}
+A token carries the address of an instruction in this fixed code,
+and a dynamic context that specifies the frame for a particular invocation of the function.
+The format of a token can now be seen: $(c, s, v)_p$.
+Here, $c$ is the context, $s$ is the address of the destination instruction, $v$ is the datum,
+and $p$ is the port identifying which input of the instruction this token is meant for.
+The value $(c, s)$ is called the fag of the token.
+
+TRIPS architecture~\cite{DBLP:conf/isca/SankaralingamNLKHBKM03} proposed
+
+EDGE architecture~\cite{DBLP:journals/computer/BurgerKMDJLMBMY04} proposed
 
 \clearpage
 
