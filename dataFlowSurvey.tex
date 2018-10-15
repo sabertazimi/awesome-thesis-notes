@@ -189,7 +189,11 @@ and the fields are used for the following:
 
 \section{Dataflow Architecture}
 \label{sec:dataflow_arch}
-Survey of basic dataflow architecture.
+
+\subsection{Original Dtaflow Architecture}
+Treleaven had a survey of dataflow architecture~\cite{DBLP:journals/csur/TreleavenBH82}.
+Data flow is based on a by-value data mechanism
+and a parallel control mechanism, supported by data tokens. 
 
 Dennis~\cite{DBLP:conf/isca/DennisM74} proposed ``The Elementary Processor'',
 as figure~\ref{fig:elementory_processor}.
@@ -216,10 +220,6 @@ if an instruction and all operands are present in the Cell.
     \label{fig:elementory_processor}
   \end{small}
 \end{figure}
-
-Treleaven had a survey of dataflow architecture~\cite{DBLP:journals/csur/TreleavenBH82}.
-Data flow is based on a by-value data mechanism
-and a parallel control mechanism, supported by data tokens. 
 
 The Manchester prototype dataflow computer~\cite{DBLP:journals/cacm/GurdKW85} proposed
 a powerful dataflow processing engine based on dynamic tagging.
@@ -249,10 +249,36 @@ Here, $c$ is the context, $s$ is the address of the destination instruction, $v$
 and $p$ is the port identifying which input of the instruction this token is meant for.
 The value $(c, s)$ is called the fag of the token.
 
+\subsection{TRIPS Architecture}
+
 TRIPS architecture~\cite{DBLP:conf/isca/SankaralingamNLKHBKM03} proposed 
-a dataflow processor using static loop execution model.
+a polymorphous dataflow processor using static loop execution model.
+
+Specialized architecture design led to performance fragility,
+in which applications incur large swings in performance
+based on how well they map to a given design.
+One strategy for combating processor fragility is to build a heterogeneous chip multiprocessor (diverse cores).
+An alternative approach (easier) is to use multiple heterogeneous processors.
+This architectural ``polymorphism'' can defined as the capability to \textbf{configure hardware}
+for \textbf{efficient execution} across broad classes of applications.
+
+A key question, is what granularity of processors and memories
+on a \textbf{CMP} is best for polymorphous capabilities.
+The finer-grained architectures (e.g FPGAs) can offer high performance
+on applications with fine-grained (data) parallelism,
+but will have difficulty achieving good performance on general-purpose and serial applications.
+A synthesis appraoch uses a fine-grained CMP to exploit regular, fine-grained parallelism
+and tackles irregular, corse-grained parallelism by
+synthesizing multiple processing elements (PEs) into larger ``logical'' processors.
+
+\subsubsection{TRIPS Overview}
+
+
+\subsection{EDGE Architecture}
 
 EDGE architecture~\cite{DBLP:journals/computer/BurgerKMDJLMBMY04} proposed
+
+\subsection{WaveScalar Architecture}
 
 WaveScalar~\cite{DBLP:conf/micro/SwansonMSO03}\cite{DBLP:journals/tocs/SwansonSMPPMOE07}
 makes use of the implementation of loop in dynamic dataflow architecture.
