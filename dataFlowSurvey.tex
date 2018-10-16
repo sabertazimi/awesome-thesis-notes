@@ -187,6 +187,8 @@ and the fields are used for the following:
         argument position in the instruction N the token is to be stored. 
 \end{compactitem}
 
+\clearpage
+
 \section{Dataflow Architecture}
 \label{sec:dataflow_arch}
 
@@ -284,6 +286,91 @@ WaveScalar~\cite{DBLP:conf/micro/SwansonMSO03}\cite{DBLP:journals/tocs/SwansonSM
 makes use of the implementation of loop in dynamic dataflow architecture.
 
 coarse-grained architecture, such as TeraFlux and Runnemede.
+
+\clearpage
+
+\section{Dataflow for AI}
+
+ASIC- or FPGA-based AI-EI chips often use a spatial architecture.
+Compared to general-purpose chips, dedicated chips are used
+in specific scenarios and their functions are limited.
+A simple and regular hardware architecture is the basis for reducing design costs
+and is a prerequisite for implementing low-cost dedicated chips.
+A low enough chip cost can hedge the limitations of dedicated chip functionality.
+
+The spatial architecture uses Dataflow processing.
+In the spatial architecture, the ALU forms a data processing chain
+that enables data to be transferred directly between ALUs.
+In this spatial architecture, each ALU has its own control logic and local storage (register file).
+Among them, the ALU with local storage is defined as PE.
+
+For spatial architectures, hardware design is based on
+low-energy memory in hierarchical memory and increases data reuse
+(essentially, convolution is spatial reuse, which reuses spatial invariance) to reduce power consumption.
+In addition, Dataflow controls data reading, writing, and processing.
+In general, the spatial architecture balances I/O and computational problems
+based on hierarchical memory and data flow,
+thereby reducing power consumption and increasing computational throughput.
+
+In the inference of deep learning, there are a large number of computational requirements.
+However, these calculations are performed in a hierarchical order.
+Therefore, the control process is relatively simple and clear.
+It can be seen that the Dataflow processing method is very consistent
+with the computational requirements based on the deep neural network inference part.
+
+The data stream can determine which data is read into which memory and when it is processed.
+In addition, there is no randomness in DNN inference.
+Therefore, an AI-EI chip based on the fixed architecture of Dataflow
+can be designed from the perspective of optimal power consumption.
+Currently, most AI-EI chips for deep learning inference use Dataflow.
+
+In hierarchical memory, a large amount of memory read and write operations
+consumes much more energy than a small memory.
+Thus, once a piece of data has been moved from large memory to small memory,
+the data block is reused as much as possible to minimize power consumption.
+However, low-power memory has limited storage space.
+How to maximize the reuse rate is the most important condition
+for designing based on the Dataflow accelerator.
+That is, by maximizing the data reuse rate to reduce I/O requirements
+and reduce data processing power consumption,
+thereby increasing throughput and reducing overall energy consumption.
+Common DNN data stream types include: weight fixed data stream, output fixed data stream, No local reuse (NLR), and row fixed data stream.
+
+Weighted fixed data stream: The weight data is read from the DRAM,
+placed in the RF of the PE and remains unchanged,
+then the input data is broadcasted to each PE,
+and finally the part and (partialsum) of the PE array are obtained.
+The processing method reduces the number of times the weight data is read from the RF of the PE,
+and minimizes the number of times the weight is directly read from the DRAM,
+thereby maximizing the multiplexing rate of the convolution
+and the weight of the filter to reduce the multiplexing rate and energy consumption.
+NeuFlow is an AI-EI chip based on this type of data processing.
+
+Output fixed (OS) data stream: By inputting data in the stream in the PE array
+and then broadcasting the weight data to the PE array,
+the sum of the parts in the RF is kept constant,
+thereby minimizing the energy consumption of the read and write parts.
+The Cambrian ShiDianNao is based on an output fixed AI-EI chip.
+In addition, depending on the processing target,
+the data stream can be divided into OS\_A with the convolution layer as the processing target
+and OS\_C with the full connection layer as the processing target.
+OS\_B is an OS data stream between OS\_A and OS\_C.
+
+NLR data stream: The RF of the PE array does not store any fixed data.
+On the contrary, in this case, all data read and write operations are performed in the global buffer.
+The Cambrian DianNao and DaNiaoNao are AI-EI chips based on this data processing method.
+
+Fixed data stream: Maximize all data multiplexing rates and make all data read and write operations in RF as much as possible,
+reducing read and write operations on global buffers to reduce power consumption.
+Each PE can complete a 1D convolution operation,
+and multiple PEs can perform a 2D convolution operation.
+In a two-dimensional PE array, the weight data of each row is multiplexed on the PE unit on the horizontal axis,
+and the input data of each row is multiplexed on the PE unit on the diagonal line,
+and multiple on the vertical axis On the PE unit,
+the portion of each row and the data are multiplexed, that is,
+the fixed data stream can maximize the multiplexing rate of all data,
+thereby optimizing the power consumption globally.
+Eyeriss' NPU is based on line-fixed AI-EI chips.
 
 \clearpage
 
