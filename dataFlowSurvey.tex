@@ -1,11 +1,12 @@
 % !TEX program = xelatex
 % !BIB program = bibtex
 
-\documentclass[UTF8]{article}
+\documentclass[UTF8,12pt,a4paper]{article}
 
 % layout
-\usepackage[left=3cm,right=3cm]{geometry}
-\usepackage{paralist} % for compactitem environment
+\usepackage[left=2.5cm,right=2.5cm]{geometry}
+\usepackage{paralist}     % for compactitem environment
+\usepackage{indentfirst}  % ident the first paragraph
 \linespread{1.25}
 % \makeatletter
 % \def\@seccntformat#1{%
@@ -51,6 +52,7 @@
 \renewcommand{\cftsecleader}{\cftdotfill{\cftsecdotsep}}
 \renewcommand\cftsecdotsep{\cftdot}
 \renewcommand\cftsubsecdotsep{\cftdot}
+\renewcommand\cftsubsubsecdotsep{\cftdot}
 \renewcommand{\contentsname}{\hfill\bfseries\Large Contents\hfill}   
 \setlength{\cftbeforesecskip}{10pt}
 
@@ -94,7 +96,7 @@
 \usepackage{appendix}
 
 \title{Survey \\ \bigskip \textbf{Dataflow architecture: state-of-the-art and research challenges}}
-\author{School of computer science and technology\\ M1801\\ M201873026\\ Yilong Liu}
+\author{Huazhong University of Science and Technology\\ School of Computer Science and Technology\\ M1801\\ M201873026\\ Yilong Liu}
 \date{\today}
 
 \begin{document}
@@ -112,6 +114,7 @@
 % \newpage
 % \pagenumbering{gobble} % no page number
 
+\pagenumbering{roman}
 \tableofcontents
 \newpage
 % \null\thispagestyle{empty}
@@ -149,16 +152,14 @@ Designs that use content-addressable memory (CAM) or dynamic tagging are called 
 They use tags in memory to facilitate \textbf{parallelism}.
 
 \subsection{Computation Organization}
-Mentioned in section~\ref{sec:dataflow_arch}.
-
-Since a data-flow computer needs to record
+As mentioned in section~\ref{sec:dataflow_arch},
+since a data-flow computer needs to record
 the large set of potentially executable instructions,
 it is difficult to conceive of supporting
 data flow with a centralized machine organization.
 Therefore proceed to support \textbf{packet communication}.
 
 \subsection{Program Organization}
-
 Programs are loaded into the CAM of a dynamic dataflow computer.
 When all of the tagged operands of an instruction become available (that is, output from previous instructions and/or user input),
 the instruction is marked as ready for execution by an execution unit.
@@ -273,8 +274,72 @@ A synthesis appraoch uses a fine-grained CMP to exploit regular, fine-grained pa
 and tackles irregular, corse-grained parallelism by
 synthesizing multiple processing elements (PEs) into larger ``logical'' processors.
 
-\subsubsection{TRIPS Overview}
+\subsubsection{The TRIPS Architecture}
+The key challenge in defining the polymorphous features
+is balancing their appropriate granularity so that
+workloads involving different levels of ILP, TLP and DLP
+can maximize their use of the available resources,
+and at the same time avoid escalating complexity and nonscalable structures.
 
+\paragraph{Core Execution Model}
+The TRIPS architecture is fundamentally \emph{block oriented}.
+Programs compiled for TRIPS are partitioned into large blocks of instructions
+with a single entry point, no internal loops (and possibly multiple exit points).
+Each block has a static set of state inputs, and
+a potentially variable set of state outputs that depends upon
+the exit point from the block.
+At runtime, the basic operational flow of the processor includes fetching a block from memory,
+loading it into the computational engine, executing it to completion,
+committing its results to the persistent architectural state if necessary,
+and then proceeding to the next block.
+
+\paragraph{Architecture Overview}
+The TRIPS prototype chip will consist of four polymorphous 16-wide cores,
+an array of 32KB memory tiles connected by a routed network,
+and a set of distributed memory controllers with channels to external memory,
+as figure~\ref{fig:trips_arch}.
+
+\begin{figure}[htb]
+  \begin{small}
+    \begin{center}
+      \includegraphics[width=\textwidth,height=5cm]{figures/isca03_trips_arch.png}
+    \end{center}
+    \caption{ISCA03 - TRIPS Architecture.}
+    \label{fig:trips_arch}
+  \end{small}
+\end{figure}
+
+A TRIPS core is typically composed of an array of homogeneous execution nodes,
+each containing an integer ALU, a floating point unit, a set of reservation stations
+(store for an insturction and two source operands), and router connections at the input and output.
+The nodes are directly connected to their nearest neighbors,
+but the routing network can deliver results to any node in the array.
+Instruction cache for each row, L1 Data cache for every ALU (through the local grid rounting network).
+The block control logic that is responsible for sequencing block execution and selecting the next block.
+
+\paragraph{The TRIPS Resources}
+The TRIPS architecture contains three main types of resources: 
+the hardcoded, non-polymorphous resources for all modes (opreate in the same manner),
+polymorphous resources for all modes (but can be configured to operate differently),
+the resources that are not required for all modes.Frame space, register file banks,
+block sequencing controls and memory tiles are polymorphous resources.
+Reservation stations with the same index \textbf{across all of the nodes} combine to form a physical frame,
+the frame space, or collection of frames, is a polymorphous resource in TRIPS.
+
+\subsubsection{D-morph: Instruction-Level Parallelism}
+The desktop morph, or D-morph, of the TRIPS processor
+uses the polymorphous capabilities of the processor
+to run \textbf{single-threaded} codes efficiently by exploiting
+instruction-level parallelism.
+To achieve high ILP, the D-morph configuration treats
+the instruction buffers as a large, distributed, instruction issue window.
+The D-morph must provide high-bandwidth instruction fetching,
+aggressive control and data speculation, and a high-bandwidth, low-latency memory system.
+
+\paragraph{Frame Space Management}
+The instruction issue window is fundamentally a three-dimensional scheduling region,
+where the x- and ydimensions correspond to the physical dimensions of the ALU array
+and the z-dimension corresponds to multiple instruction slots at each ALU node.
 
 \subsection{EDGE Architecture}
 
