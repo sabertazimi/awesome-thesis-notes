@@ -274,26 +274,66 @@ A synthesis appraoch uses a fine-grained CMP to exploit regular, fine-grained pa
 and tackles irregular, corse-grained parallelism by
 synthesizing multiple processing elements (PEs) into larger ``logical'' processors.
 
-\subsubsection{The TRIPS Architecture}
 The key challenge in defining the polymorphous features
 is balancing their appropriate granularity so that
 workloads involving different levels of ILP, TLP and DLP
 can maximize their use of the available resources,
 and at the same time avoid escalating complexity and nonscalable structures.
 
-\paragraph{Core Execution Model}
+\subsubsection{EDGE ISA}
+
+EDGE ISA~\cite{DBLP:journals/computer/BurgerKMDJLMBMY04} proposed:
+
+\begin{compactitem}
+  \item fine-grained concurrency with pipeline depth limits
+  \item power-efficient high performance with hastened power limits
+  \item on-chip communication-dominated execution (direct instruction communication)
+  \item polymorphous execution and memory units in different modes
+\end{compactitem}
+
+Out-of-order issue RISC and CISC designs require many inefficient and power-hungry structures,
+such as per-instruction register renaming (direct temporary value from producer to consumer),
+associative issue window searches (64 instruction buffers per node),
+complex dynamic schedulers,
+high-bandwidth branch predictors (only needs to predict a branch once every 8 (128 instructions per node / 16 node per core) cycles),
+large multiported register files (direct temporary value from producer to consumer),
+and complex bypass networks (a simple point-to-point routing network with the average distance is short
+because the compiler places dependent instructions on the same node or on nearby nodes).
+In an EDGE architecture, a producer with multiple consumers would specify each of those consumers explicitly,
+rather than writing to a single register that multiple consumers read (RISC architecture).
+The ISA directly expresses the dataflow graph that the compiler generates internally,
+instead of requiring the hardware to rediscover data dependences dynamically at runtime (RISC/CISC architectures).
+
+An EDGE compiler has two new responsibilities in addition to those of a classic optimizing RISC compiler.
+The first is forming large blocks (hyperblocks in the TRIPS architecture) that have no internal control flow,
+thus permitting them to be scheduled as a unit.
+The second is the spatial scheduling of those blocks,
+in which the compiler statically assigns instructions in a block to ALUs in the execution array,
+with the goal of reducing interinstruction communication distances and exposing parallelism.
+RISC relies too little on the compiler, while VLIW relies on it too much. 
+EDGE ISA provide a proper division between the compiler and architecture,
+matching their responsibilities to their intrinsic capabilities,
+and making the job of each simpler and more efficient.
+
+\subsubsection{Core Execution Model}
 The TRIPS architecture is fundamentally \emph{block oriented}.
 Programs compiled for TRIPS are partitioned into large blocks of instructions
 with a single entry point, no internal loops (and possibly multiple exit points).
-Each block has a static set of state inputs, and
-a potentially variable set of state outputs that depends upon
-the exit point from the block.
+Each block has a static set of state inputs,
+and a potentially variable set of state outputs
+that depends upon the exit point from the block.
 At runtime, the basic operational flow of the processor includes fetching a block from memory,
 loading it into the computational engine, executing it to completion,
 committing its results to the persistent architectural state if necessary,
 and then proceeding to the next block.
+The TRIPS microarchitecture behaves like a conventional processor with sequential semantics at the block level,
+with each block behaving as a ``megainstruction''.
+The compiler builds 128-instruction blocks,
+organized into groups of eight instructions per node at each of the 16 execution nodes.
+Branches can only jump out of a hyperblock to the start of another hyperblock,
+never to another point in the same hyperblock or into the middle of another.
 
-\paragraph{Architecture Overview}
+\subsubsection{Architecture Overview}
 The TRIPS prototype chip will consist of four polymorphous 16-wide cores,
 an array of 32KB memory tiles connected by a routed network,
 and a set of distributed memory controllers with channels to external memory,
@@ -311,13 +351,18 @@ as figure~\ref{fig:trips_arch}.
 
 A TRIPS core is typically composed of an array of homogeneous execution nodes,
 each containing an integer ALU, a floating point unit, a set of reservation stations
-(store for an insturction and two source operands), and router connections at the input and output.
+(store for an insturction and two source operands, 64 instruction buffers,
+TRIPS microarchitecture supports up to 8 blocks (16 * 64 / 128 = 8) executing concurrently,
+128 instructions per block, 16 * 64 = 1024 instruction buffers per core),
+and router connections at the input and output.
 The nodes are directly connected to their nearest neighbors,
 but the routing network can deliver results to any node in the array.
 Instruction cache for each row, L1 Data cache for every ALU (through the local grid rounting network).
 The block control logic that is responsible for sequencing block execution and selecting the next block.
+The partitioned register file requires fewer ports because the processor never
+writes temporary values produced and consumed within a block to the register file.
 
-\paragraph{The TRIPS Resources}
+\subsubsection{The TRIPS Resources}
 The TRIPS architecture contains three main types of resources: 
 the hardcoded, non-polymorphous resources for all modes (opreate in the same manner),
 polymorphous resources for all modes (but can be configured to operate differently),
@@ -336,21 +381,47 @@ the instruction buffers as a large, distributed, instruction issue window.
 The D-morph must provide high-bandwidth instruction fetching,
 aggressive control and data speculation, and a high-bandwidth, low-latency memory system.
 
-\paragraph{Frame Space Management}
 The instruction issue window is fundamentally a three-dimensional scheduling region,
-where the x- and ydimensions correspond to the physical dimensions of the ALU array
+where the x- and y-dimensions correspond to the physical dimensions of the ALU array
 and the z-dimension corresponds to multiple instruction slots at each ALU node.
+A 3-D region (the array and the set of frames) into
+which one hyperblock is mapped is called an architectural frame, or A-frame.
+Consumers are encoded in the producer instructions as X, Y, and Zrelative offsets.
+Each producer instruction prepends its A-frame ID to the Z-coordinate of its consumer to
+form the correct instruction buffer address of the consumer.
+Values passed between hyperblocks are transmitted through
+the register file using the register stitch table.
 
-\subsection{EDGE Architecture}
+To summarize, with accurate exit prediction, high-bandwidth I-fetching,
+partitioned data caches, and concurrent execution of hyperblocks with inter-block value forwarding,
+the D-morph is able to use the instruction buffers as a polymorphous out-of-order issue window effectively.
 
-EDGE architecture~\cite{DBLP:journals/computer/BurgerKMDJLMBMY04} proposed
+\subsubsection{T-morph: Thread-Level Parallelism}
+Frame processors time-share the processor by allocating threads to unique sets of physical frames.
+a TRIPS core can dedicate all 128 frames to a single thread in the Dmorph,
+or 64 frames to each of two threads in the T-morph (uneven frame sharing is also possible).
+The T-morph maintains n program counters (where n is the number of concurrent threads allowed)
+and n global history shift registers in the exit predictor to reduce thread-induced mispredictions.
+Per-thread IDs on cache tags are necessary to prevent illegal cross-thread interference.
+
+\subsubsection{S-morph: Data-Level Parallelism}
+Streaming media and scientific applications are characterized by data level parallelism (DLP)
+including predictable loop-based control flow with large iteration counts,
+large data sets, regular access patterns, poor locality but tolerance to memory latency,
+and high computation intensity with tens to hundreds of arithmetic operations performed per element loaded from memory.
+
+The S-morph fuses multiple A-frames to make a super A-frame,
+instead of using separate A-frames for speculation or multithreading.
+Inner loops of a streaming application are unrolled
+to fill the reservation stations within these super A-frames.
+The S-morph employs mapping reuse, in which a block is kept in the reservation stations and used multiple times
+Until the iteration counter reaches zero, the super A-frame is cleared
+and the hardware maps the next block onto the ALUs for execution.
 
 \subsection{WaveScalar Architecture}
 
 WaveScalar~\cite{DBLP:conf/micro/SwansonMSO03}\cite{DBLP:journals/tocs/SwansonSMPPMOE07}
 makes use of the implementation of loop in dynamic dataflow architecture.
-
-coarse-grained architecture, such as TeraFlux and Runnemede.
 
 \clearpage
 
