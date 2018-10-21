@@ -215,7 +215,7 @@ if an instruction and all operands are present in the Cell.
     \begin{center}
       \includegraphics[width=\textwidth,height=8cm]{figures/isca94_elementory_processor.png}
     \end{center}
-    \caption{ISCA94 - Elementary Processor.}
+    \caption{ISCA94 - Elementary processor.}
     \label{fig:elementory_processor}
   \end{small}
 \end{figure}
@@ -312,6 +312,17 @@ RISC relies too little on the compiler, while VLIW relies on it too much.
 EDGE ISA provide a proper division between the compiler and architecture,
 matching their responsibilities to their intrinsic capabilities,
 and making the job of each simpler and more efficient.
+A typical TRIPS code example is as figure~\ref{fig:trips_code}.
+
+\begin{figure}[htb]
+  \begin{small}
+    \begin{center}
+      \includegraphics[width=\textwidth,height=10cm]{figures/ieee_computer_trips_code.png}
+    \end{center}
+    \caption{TRIPS code example.}
+    \label{fig:trips_code}
+  \end{small}
+\end{figure}
 
 \subsection{Core Execution Model}
 The TRIPS architecture is fundamentally \emph{block oriented}.
@@ -342,7 +353,7 @@ as figure~\ref{fig:trips_arch}.
     \begin{center}
       \includegraphics[width=\textwidth,height=5cm]{figures/isca03_trips_arch.png}
     \end{center}
-    \caption{ISCA03 - TRIPS Architecture.}
+    \caption{ISCA03 - TRIPS architecture.}
     \label{fig:trips_arch}
   \end{small}
 \end{figure}
