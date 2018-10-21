@@ -65,7 +65,7 @@
 
 % tables
 \usepackage{caption} 
-\captionsetup[table]{skip=10pt}
+% \captionsetup[table]{skip=10pt}
 
 % math, algorithms, code
 \usepackage{amsmath,amssymb,url}
@@ -152,8 +152,7 @@ Designs that use content-addressable memory (CAM) or dynamic tagging are called 
 They use tags in memory to facilitate \textbf{parallelism}.
 
 \subsection{Computation Organization}
-As mentioned in section~\ref{sec:dataflow_arch},
-since a data-flow computer needs to record
+Since a data-flow computer needs to record
 the large set of potentially executable instructions,
 it is difficult to conceive of supporting
 data flow with a centralized machine organization.
@@ -190,10 +189,7 @@ and the fields are used for the following:
 
 \clearpage
 
-\section{Dataflow Architecture}
-\label{sec:dataflow_arch}
-
-\subsection{Original Dtaflow Architecture}
+\section{Original Dtaflow Architecture}
 Treleaven had a survey of dataflow architecture~\cite{DBLP:journals/csur/TreleavenBH82}.
 Data flow is based on a by-value data mechanism
 and a parallel control mechanism, supported by data tokens. 
@@ -235,7 +231,7 @@ and so they are restricted to implementing loops and cannot accommodate recursio
 Dynamic systems permit recursive reactivation,
 either by code-copying or tagging, at every occurrence of re-entry.
 
-The MIT tagged-token dataflow architecture~\cite{DBLP:journals/tc/ArvindN90} proposed
+The MIT tagged-token architecture~\cite{DBLP:journals/tc/ArvindN90} proposed
 a novel multiprocessor dataflow architecture.
 A traditional von Neumann processor has fundamental characteristics
 that reduce its effectiveness in a parallel machine:
@@ -252,7 +248,9 @@ Here, $c$ is the context, $s$ is the address of the destination instruction, $v$
 and $p$ is the port identifying which input of the instruction this token is meant for.
 The value $(c, s)$ is called the fag of the token.
 
-\subsection{TRIPS Architecture}
+\clearpage
+
+\section{TRIPS Architecture}
 
 TRIPS architecture~\cite{DBLP:conf/isca/SankaralingamNLKHBKM03} proposed 
 a polymorphous dataflow processor using static loop execution model.
@@ -280,7 +278,7 @@ workloads involving different levels of ILP, TLP and DLP
 can maximize their use of the available resources,
 and at the same time avoid escalating complexity and nonscalable structures.
 
-\subsubsection{EDGE ISA}
+\subsection{EDGE ISA}
 
 EDGE ISA~\cite{DBLP:journals/computer/BurgerKMDJLMBMY04} proposed:
 
@@ -315,7 +313,7 @@ EDGE ISA provide a proper division between the compiler and architecture,
 matching their responsibilities to their intrinsic capabilities,
 and making the job of each simpler and more efficient.
 
-\subsubsection{Core Execution Model}
+\subsection{Core Execution Model}
 The TRIPS architecture is fundamentally \emph{block oriented}.
 Programs compiled for TRIPS are partitioned into large blocks of instructions
 with a single entry point, no internal loops (and possibly multiple exit points).
@@ -333,7 +331,7 @@ organized into groups of eight instructions per node at each of the 16 execution
 Branches can only jump out of a hyperblock to the start of another hyperblock,
 never to another point in the same hyperblock or into the middle of another.
 
-\subsubsection{Architecture Overview}
+\subsection{Architecture Overview}
 The TRIPS prototype chip will consist of four polymorphous 16-wide cores,
 an array of 32KB memory tiles connected by a routed network,
 and a set of distributed memory controllers with channels to external memory,
@@ -362,7 +360,7 @@ The block control logic that is responsible for sequencing block execution and s
 The partitioned register file requires fewer ports because the processor never
 writes temporary values produced and consumed within a block to the register file.
 
-\subsubsection{The TRIPS Resources}
+\subsection{The TRIPS Resources}
 The TRIPS architecture contains three main types of resources: 
 the hardcoded, non-polymorphous resources for all modes (opreate in the same manner),
 polymorphous resources for all modes (but can be configured to operate differently),
@@ -371,7 +369,7 @@ block sequencing controls and memory tiles are polymorphous resources.
 Reservation stations with the same index \textbf{across all of the nodes} combine to form a physical frame,
 the frame space, or collection of frames, is a polymorphous resource in TRIPS.
 
-\subsubsection{D-morph: Instruction-Level Parallelism}
+\subsection{D-morph: Instruction-Level Parallelism}
 The desktop morph, or D-morph, of the TRIPS processor
 uses the polymorphous capabilities of the processor
 to run \textbf{single-threaded} codes efficiently by exploiting
@@ -396,7 +394,7 @@ To summarize, with accurate exit prediction, high-bandwidth I-fetching,
 partitioned data caches, and concurrent execution of hyperblocks with inter-block value forwarding,
 the D-morph is able to use the instruction buffers as a polymorphous out-of-order issue window effectively.
 
-\subsubsection{T-morph: Thread-Level Parallelism}
+\subsection{T-morph: Thread-Level Parallelism}
 Frame processors time-share the processor by allocating threads to unique sets of physical frames.
 a TRIPS core can dedicate all 128 frames to a single thread in the Dmorph,
 or 64 frames to each of two threads in the T-morph (uneven frame sharing is also possible).
@@ -404,7 +402,7 @@ The T-morph maintains n program counters (where n is the number of concurrent th
 and n global history shift registers in the exit predictor to reduce thread-induced mispredictions.
 Per-thread IDs on cache tags are necessary to prevent illegal cross-thread interference.
 
-\subsubsection{S-morph: Data-Level Parallelism}
+\subsection{S-morph: Data-Level Parallelism}
 Streaming media and scientific applications are characterized by data level parallelism (DLP)
 including predictable loop-based control flow with large iteration counts,
 large data sets, regular access patterns, poor locality but tolerance to memory latency,
@@ -418,7 +416,9 @@ The S-morph employs mapping reuse, in which a block is kept in the reservation s
 Until the iteration counter reaches zero, the super A-frame is cleared
 and the hardware maps the next block onto the ALUs for execution.
 
-\subsection{WaveScalar Architecture}
+\clearpage
+
+\section{WaveScalar Architecture}
 
 WaveScalar~\cite{DBLP:conf/micro/SwansonMSO03}\cite{DBLP:journals/tocs/SwansonSMPPMOE07}
 makes use of the implementation of loop in dynamic dataflow architecture.
