@@ -157,8 +157,18 @@ the large set of potentially executable instructions,
 it is difficult to conceive of supporting
 data flow with a centralized machine organization.
 Therefore proceed to support \textbf{packet communication}.
+A dataflow computer executes a program by receiving, processing and sending out tokens,
+each containing some data and a tag. 
+Dependences between instructions are translated into tag matching and tag transformation.
+Processing starts when a set of matched tokens arrives at the execution unit.
+The instruction which has to be fetched from the instruction store
+(according to the tag information) contains information about  what to do with data  and how to transform the tags. 
+The matching unit and the execution unit are connected by an asynchronous pipeline, with queues added between the stages. 
+Some form of associative memory is required to support token matching,
+such as a real memory with associative access, a simulated memory based on hashing,  or a direct matched memory.
 
 \subsection{Program Organization}
+Two important characteristics of dataflow graphs is functionality and composability.
 Programs are loaded into the CAM of a dynamic dataflow computer.
 When all of the tagged operands of an instruction become available (that is, output from previous instructions and/or user input),
 the instruction is marked as ready for execution by an execution unit.
@@ -187,9 +197,87 @@ and the fields are used for the following:
         argument position in the instruction N the token is to be stored. 
 \end{compactitem}
 
+\subsection{Dataflow Computer Model}
+
+Dataflow Computers can be divided into pure dataflow and hybrid dataflow~\cite{DBLP:books/daglib/0097728}.
+Pure dataflow computers include static dataflow, dynamic dataflow and the explicit token store architecture.
+
+Due to static dataflow computer~\cite{DBLP:conf/isca/DennisM74} lack of support for procedure calls and recursion, it's a very simple model.
+Static dataflow approach allows at most one token on any one arc,
+and it shoulde obey single-assignment rule (write a variable only once in a graph).
+A node is fired at the moment when it becomes enabled.
+
+As for dynamic dataflow~\cite{DBLP:journals/cacm/GurdKW85}~\cite{DBLP:journals/tc/ArvindN90},
+each loop iteration or subprogram invocation should be able to
+execute in parallel as a separate instance of a reentrant subgraph.
+Each arc can be viewed as a bag that may contain an arbitrary number of tokens with different tags.
+A node is enabled and fired as soon as tokens with identical tags are present on all input arcs.
+The U-interpreter (unraveling interpreter) $(context.initVal.destination, data)_{type}$
+(simply as $(c.i.n, data)_{data} \text{ or } (c.i.n, data)_{control}$).
+As figure~\ref{fig:dynamic_dataflow_interpreter} and figure ~\ref{fig:dynamic_dataflow_interpreter_call} showed,
+use U-interpreter in dynamic dataflow can implement loop or procedure calls.
+To implement complex data structure and obey single-assignment rule,
+dynamic dataflow proposed the concept of I-structure,
+a write-once and read multiple times memory.
+
+\begin{figure}[htb]
+  \begin{small}
+    \begin{center}
+      \includegraphics[width=\textwidth,height=8cm]{figures/dynamic_dataflow_interpreter.png}
+    \end{center}
+    \caption{U-interpreter for loop implementation.}
+    \label{fig:dynamic_dataflow_interpreter}
+  \end{small}
+\end{figure}
+
+\begin{figure}[htb]
+  \begin{small}
+    \begin{center}
+      \includegraphics[width=\textwidth,height=8cm]{figures/dynamic_dataflow_interpreter_call.png}
+    \end{center}
+    \caption{U-interpreter for procedure calls.}
+    \label{fig:dynamic_dataflow_interpreter_call}
+  \end{small}
+\end{figure}
+
+Explicit token store dataflow model~\cite{DBLP:conf/isca/PapadopoulosC90}
+has the target for efficient implementation of token matching,
+as figure~\ref{fig:explicit_token_store_dataflow} showed.
+It allocates a separate frame in the frame memory for each active loop iteration or subprogram invocation.
+A frame consists of slots where each slot holds an operand that is used in the corresponding activity. 
+Since access to slots is direct (i.e. through offsets relative to the frame pointer), no associative search is needed.
+
+\begin{figure}[htb]
+  \begin{small}
+    \begin{center}
+      \includegraphics[width=\textwidth,height=8cm]{figures/explicit_token_store_dataflow.png}
+    \end{center}
+    \caption{Explicit token store dataflow with frame memory.}
+    \label{fig:explicit_token_store_dataflow}
+  \end{small}
+\end{figure}
+
+Dynamic dataflow has better performance (compared with static)
+as it allows multiple tokens on each arc thereby unfolding more parallelism. 
+But it needs a efficient implementation of the matching unit that collects tokens with matching tags
+(Unfortunately, it is not cost-effective since the amount of memory needed to store tokens waiting for a match tends to be very large. 
+As a result, all existing machines use some form of hashing techniques that are typically not as fast as associative memory).
+And it has a bad single thread performance and poor sequential code performance (when not enough workload is present),
+dyadic instructions lead to pipeline bubbles when first operand tokens arrive,
+it has no instruction locality.
+
+Large-Grain (coarse-grain) dataflow node contains a sequential block of instructions.
+A macro dataflow node is activated in the dataflow manner, 
+its instruction sequences is executed in the von Neumann style.
+Off-the-shelf microprocessors can be used to support the execution stage. 
+Large-grain dataflow machines typically decouple the matching stage
+(sometimes called signal stage, synchronization stage, etc.)
+from the execution stage by use of FIFO-buffers. 
+Pipeline bubbles are avoided by the decoupling and FIFO-buffering. 
+
 \clearpage
 
-\section{Original Dtaflow Architecture}
+\section{Pure Dtaflow Architecture}
 Treleaven had a survey of dataflow architecture~\cite{DBLP:journals/csur/TreleavenBH82}.
 Data flow is based on a by-value data mechanism
 and a parallel control mechanism, supported by data tokens. 
@@ -247,6 +335,21 @@ The format of a token can now be seen: $(c, s, v)_p$.
 Here, $c$ is the context, $s$ is the address of the destination instruction, $v$ is the datum,
 and $p$ is the port identifying which input of the instruction this token is meant for.
 The value $(c, s)$ is called the fag of the token.
+
+Monsoon~\cite{DBLP:conf/isca/PapadopoulosC90} is an explicit token store machine,
+each PE is using an eight-stage pipeline:
+
+\begin{compactitem}
+  \item instruction fetch: precedes token matching (in contrast to dynamic dataflow processors with associative matching units),
+  \item effective address generation: explicit token address is computed from the frame address and operand offset,
+  \item presence bit operation: a presence bit is accessed to find out if the first operand of a dyadic operation has already arrived,
+        if not arrived, presence bit set and the current token is stored into the frame slot of the frame memory,
+        if arrived, presence bit is reset and the operand can be retrieved from the slot of the frame memory in next stage,
+  \item frame operation stage: operand storing or retrieving,
+  \item next three stages: execution stages in the course of which the next tag is also computed concurrently,
+  \item form-token: forms one or two new tokens that are sent to the network, stored in a user token queue,
+        a system token queue, or directly recirculated to the instruction fetch stage of the pipeline.
+\end{compactitem}
 
 \clearpage
 
