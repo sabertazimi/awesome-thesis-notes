@@ -541,14 +541,31 @@ and the hardware maps the next block onto the ALUs for execution.
 \clearpage
 
 \section{WaveScalar Architecture}
-
-Silicon technology will continue to provide an exponential increase in the availability of raw transistors.
-However, effectively translating this resource into application performance is an open challenge
-(due to increasing wire-delay relative to switching speed and the exponential cost of circuit complexity)
 WaveScalar ~\cite{DBLP:conf/micro/SwansonMSO03}\cite{DBLP:journals/tocs/SwansonSMPPMOE07}
 is a dataflow instruction set architecture and execution model designed for scalable,
 low-complexity/high-performance processors.
 WaveScalar makes use of the implementation of loop in dynamic dataflow architecture.
+WaveScalar architectures cache instructions and the value on in a \textbf{WaveCache},
+a simple grid of ``alu-in-cache'' nodes.
+By co-locating computation and data in physical space,
+the WaveCache minimizes long wire, high-latency communication.
+
+\subsection{Processor Scaling Wall}
+Silicon technology will continue to provide an exponential increase in the availability of raw transistors.
+However, effectively translating this resource into application performance is an open challenge
+Simply scaling up current architectures will not convert these new transistors to commensurate increases in performance.
+
+\begin{compactitem}
+  \item fast transistors but slow wires;
+  \item the increasing cost of circuit complexity;
+  \item  the decreasing reliability of circuit technology (shrinking feature sizes
+  and continued scaling of the underlying material characteristics)
+\end{compactitem}
+
+Unlike past dataflow work focusing on maximizing processor utilization,
+WaveScalar’s goal is to minimize communication costs by ridding the processor of long wires and broadcast networks.
+It includes a completely \textbf{decentralized} implementation of the ``token-store'' of traditional dataflow architectures
+and a \textbf{distributed} execution model.
 
 \clearpage
 
