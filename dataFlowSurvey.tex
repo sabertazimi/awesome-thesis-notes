@@ -361,6 +361,13 @@ each PE is using an eight-stage pipeline:
 
 \clearpage
 
+\section{Raw Machine}
+
+RAW~\cite{DBLP:conf/asplos/LeeBFSBSA98} use static orchestration to manage global operations,
+but in a dynamically scheduled.
+
+\clearpage
+
 \section{TRIPS Architecture}
 
 TRIPS architecture~\cite{DBLP:conf/isca/SankaralingamNLKHBKM03} proposed 
@@ -561,11 +568,36 @@ Simply scaling up current architectures will not convert these new transistors t
   \item  the decreasing reliability of circuit technology (shrinking feature sizes
   and continued scaling of the underlying material characteristics)
 \end{compactitem}
+Due to slow broadcast networks, associative searches,
+complex control logic, and inherently centralized structures,
+modern superscalar processor designs will not scale easily.
+
+\subsection{Key of WaveScalar}
 
 Unlike past dataflow work focusing on maximizing processor utilization,
 WaveScalar’s goal is to minimize communication costs by ridding the processor of long wires and broadcast networks.
 It includes a completely \textbf{decentralized} implementation of the ``token-store'' of traditional dataflow architectures
 and a \textbf{distributed} execution model.
+
+WaveScalar efficiently supports traditional von Neumann-style memory semantics
+in a dataflow model (\textbf{allow side effects}).
+Such a memory ordering scheme can efficiently enables
+true dataflow execution of programs written in \textit{any} language.
+
+TRIPS~\cite{DBLP:conf/isca/SankaralingamNLKHBKM03}and Raw~\cite{DBLP:conf/asplos/LeeBFSBSA98},
+have extended the von Neumann paradigm in novel ways,
+but they still rely on a program counter (block counter)
+to sequence program execution and memory access.
+WaveScalar completely abandons the program counter and linear von Neumann execution.
+
+WaveScalar instructions execute in-place in the memory system
+and explicitly send their results to their dependents.
+WaveScalar instructions are cached and executed
+by an intelligent, distributed instruction cache – the WaveCache.
+The WaveCache loads instructions from memory and assigns them to processing elements for execution.
+Optimizing instruction placement allows a WaveCache to
+take advantage of predictability in the dynamic data dependencies of a program,
+which called \textit{dataflow locality}.
 
 \clearpage
 
