@@ -1,0 +1,188 @@
+% !TEX program = xelatex
+% !BIB program = bibtex
+
+\documentclass[UTF8,12pt,a4paper]{article}
+
+\usepackage{ctex}
+
+% layout
+\usepackage[left=2.5cm,right=2.5cm]{geometry}
+\usepackage{paralist}     % for compactitem environment
+\usepackage{indentfirst}  % ident the first paragraph
+\linespread{1.25}
+% \makeatletter
+% \def\@seccntformat#1{%
+%   \expandafter\ifx\csname c@#1\endcsname\c@section
+%   Section \thesection:
+%   \else
+%   \csname the#1\endcsname\quad
+%   \fi}
+% \makeatother
+ 
+% page headings
+\usepackage{fancyhdr}
+\setlength{\headheight}{15.2pt}
+\pagestyle{fancy}
+\lhead{\leftmark}
+\rhead{M201873026 Yilong Liu}
+\cfoot{\thepage}
+% \makeatletter
+% \let\headauthor\@author
+% \makeatother
+
+% url/ref
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks,
+  citecolor=black,
+  filecolor=black,
+  linkcolor=black,
+  urlcolor=black,
+  pdfauthor={Yilong Liu},
+  pdftitle={Graph Processing: state-of-the-art and research challenges}
+}
+
+% vertical centering title page
+\usepackage{titling}
+\renewcommand\maketitlehooka{\null\mbox{}\vfill}
+\renewcommand\maketitlehookd{\vfill\null}
+
+% table of contents
+\usepackage{tocloft}
+\renewcommand\cftsecfont{\normalfont}
+\renewcommand\cftsecpagefont{\normalfont}
+\renewcommand{\cftsecleader}{\cftdotfill{\cftsecdotsep}}
+\renewcommand\cftsecdotsep{\cftdot}
+\renewcommand\cftsubsecdotsep{\cftdot}
+\renewcommand\cftsubsubsecdotsep{\cftdot}
+\renewcommand{\contentsname}{\hfill\bfseries\Large Contents\hfill}   
+\setlength{\cftbeforesecskip}{10pt}
+
+% figures
+\usepackage{graphicx}
+\graphicspath{figures/}
+% \newcommand\figureht{\dimexpr
+%   \textheight-3\baselineskip-\parskip-.2em-
+%   \abovecaptionskip-\belowcaptionskip\relax}
+
+
+% tables
+\usepackage{caption} 
+% \captionsetup[table]{skip=10pt}
+
+% math, algorithms, code
+\usepackage{amsmath,amssymb,url}
+\usepackage{algorithm,algorithmicx,algpseudocode}
+\usepackage{listings}
+
+\lstset{
+   extendedchars=true,
+   basicstyle=\footnotesize\ttfamily,
+   showstringspaces=false,
+   showspaces=false,
+   numbers=left,
+   numberstyle=\footnotesize,
+   numbersep=9pt,
+   tabsize=2,
+   breaklines=true,
+   showtabs=false,
+   captionpos=b
+}
+
+% bibliography
+\usepackage[super,square,comma,sort]{natbib} % for \citet and \citep
+\renewcommand{\refname}{References}
+% \begin{filecontents}{report.bib}
+% \end{filecontents} 
+
+% appendix
+\usepackage{appendix}
+
+\title{Survey \\ \bigskip \textbf{Graph Processing: state-of-the-art and research challenges}}
+\author{Huazhong University of Science and Technology\\ School of Computer Science and Technology\\ M1801\\ M201873026\\ Yilong Liu}
+\date{\today}
+
+\begin{document}
+
+\pagenumbering{gobble} % no page number
+\maketitle
+\newpage
+% \null\thispagestyle{empty}
+% \newpage
+
+% \pagenumbering{roman}
+% \section*{Abstract}\sectionmark{Abstract}
+% \addcontentsline{toc}{section}{Abstract}
+% \addcontentsline{toc}{section}{\protect\numberline{}Abstract}
+% \newpage
+% \pagenumbering{gobble} % no page number
+
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+% \null\thispagestyle{empty}
+% \newpage
+
+\pagenumbering{arabic}
+
+\section{FPGA}
+
+FPGA in Data Center~\cite{DBLP:conf/isca/PutnamCCCCDEFGGHHHHKLLPPSTXB14}.
+
+\begin{compactitem}
+  \item cpu 通用
+  \item gpu 高吞吐量
+  \item fpga 低延迟
+\end{compactitem}
+
+FPGA 比 CPU 和 GPU 能效高，体系结构上的根本优势是无指令、无需共享内存.
+我们发现通过 OpenCL 写 DRAM、启动 kernel、读 DRAM 一个来回，需要 1.8 毫秒。而通过 PCIe DMA 来通信，却只要 1~2 微秒.
+在数据中心里 FPGA 的主要优势是稳定又极低的延迟，适用于流式的计算密集型任务和通信密集型任务.
+FPGA 定义为通信的「大管家」，不管是服务器跟服务器之间的通信，虚拟机跟虚拟机之间的通信，进程跟进程之间的通信，CPU 跟存储设备之间的通信，都可以用 FPGA 来加速.
+不管通信还是机器学习、加密解密，算法都是很复杂的,
+如果试图用 FPGA 完全取代 CPU，势必会带来 FPGA 逻辑资源极大的浪费，也会提高 FPGA 程序的开发成本.
+更实用的做法是 FPGA 和 CPU 协同工作，局部性和重复性强的归 FPGA，复杂的归 CPU.
+
+\clearpage
+
+% \begin{table}
+%   \begin{small}    
+%     \caption{This is for long caption.}
+%     \label{tab:table}
+%     \begin{center}
+%       \begin{tabular}[c]{l|l}
+%         \hline
+%         \multicolumn{1}{c|}{\textbf{xx}} & 
+%         \multicolumn{1}{c}{\textbf{xx}} \\
+%         \hline
+% 	      a & b \\
+% 	      c & d \\
+% 	      e & f \\
+%         \hline
+%       \end{tabular}
+%     \end{center}
+%   \end{small}
+% \end{table}
+
+% \begin{algorithm}
+%   \floatname{algorithm}{算法}
+% 	\algrenewcommand\algorithmicrequire{\textbf{输入：}}
+% 	\algrenewcommand\algorithmicensure{\textbf{输出：}}
+% 	\caption{xxxxxxxxxx}
+% 	\label{alg:main}
+%   \begin{algorithmic}[1]
+%     \State \textbf{return} $state$
+% 	\end{algorithmic}  
+% \end{algorithm}
+
+% \begin{equation}
+%   \text{UCT} = \frac{w_i}{s_i} + c\sqrt{\frac{\ln{s_p}}{s_i}}
+%   \label{eq:uct}
+% \end{equation}
+
+\bibliographystyle{unsrt}
+\bibliography{bibs/graph}
+\addcontentsline{toc}{section}{References}
+\newpage
+
+\end{document}
