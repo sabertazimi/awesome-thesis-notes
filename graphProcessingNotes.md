@@ -21,6 +21,8 @@
     - [Memory Schedule](#memory-schedule)
   - [Dataset](#dataset)
   - [Tools](#tools)
+    - [Parallel Programming](#parallel-programming)
+    - [Other Libs](#other-libs)
     - [GCC](#gcc)
       - [strict-alias warnings](#strict-alias-warnings)
     - [Time Stamp Counter](#time-stamp-counter)
@@ -143,6 +145,14 @@ NUMA 默认的内存分配策略是优先在进程所在 CPU 的本地内存中�
 - [us road](http://www.dis.uniroma1.it/challenge9/download.shtml)
 
 ## Tools
+
+### Parallel Programming
+
+- [OpenMP](https://www.openmp.org)
+
+### Other Libs
+
+- [Lib BLAS](http://www.netlib.org/blas/)
 
 ### GCC
 
