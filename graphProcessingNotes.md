@@ -21,6 +21,7 @@
     - [Memory Schedule](#memory-schedule)
   - [Dataset](#dataset)
   - [Tools](#tools)
+    - [Perf Tools](#perf-tools)
     - [Parallel Programming](#parallel-programming)
     - [Other Libs](#other-libs)
     - [GCC](#gcc)
@@ -146,6 +147,10 @@ NUMA 默认的内存分配策略是优先在进程所在 CPU 的本地内存中�
 
 ## Tools
 
+### Perf Tools
+
+- [Flame Graph](https://github.com/brendangregg/FlameGraph)
+
 ### Parallel Programming
 
 - [OpenMP](https://www.openmp.org)
@@ -161,7 +166,8 @@ NUMA 默认的内存分配策略是优先在进程所在 CPU 的本地内存中�
 for strict-aliasing warnings:
 
 1. use a union to represent the memory need to reinterpret
-2. use a reinterpret_cast, cast via `char *` at the point where reinterpret the memory - `char *` are defined as being able to alias anything
+2. use a reinterpret_cast, cast via `char *` at the point where reinterpret
+  the memory - `char *` are defined as being able to alias anything
 3. use a type which has `__attribute__((__may_alias__))`
 4. turn off the aliasing assumptions globally using -fno-strict-aliasing
 
