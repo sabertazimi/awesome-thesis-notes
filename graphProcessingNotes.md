@@ -89,14 +89,17 @@
 ### Solution
 
 - 在进行流式分区时, 保证 scatter 阶段的源顶点与 gather 阶段的目的顶点的局部性 (使其位于同一个 streaming partion)
-- 利用 Grid Representation 可以达到这一目的: 两级结构的分区 (2-level hierarchical partitioning) + 双滑动窗口 (Dual sliding windows)
+- 利用 Grid Representation 可以达到这一目的:
+  两级结构的分区 (2-level hierarchical partitioning) + 双滑动窗口 (Dual sliding windows)
 
 ### Grid Representation
 
 - 将顶点划分为 P 个相等的 chunks
 - 将边划分为 P x P 个 blocks: 边源顶点所在的chunk决定其在网格中的行，边目的顶点所在的chunk决定其在网格中的列
 
-第 n 行中的边的源顶点应为 chunk-n 中的顶点, 第 n 列中的边的目的顶点应为 chunk-n 中的顶点: 第 (m, n) 个 block 中的边的源顶点应为 chunk-m 中的顶点, 目的顶点应为 chunk-n 中的顶点
+第 n 行中的边的源顶点应为 chunk-n 中的顶点,
+第 n 列中的边的目的顶点应为 chunk-n 中的顶点: 第 (m, n) 个 block 中的边的源顶点应为 chunk-m 中的顶点,
+目的顶点应为 chunk-n 中的顶点
 
 ### Dual Sliding Windows
 
@@ -119,7 +122,8 @@
 
 引入了 node 和 distance:
 
-- 对于 CPU 和 Memory 这两种最宝贵的硬件资源, NUMA 用近乎严格的方式划分了所属的资源组 (node), 而每个资源组内的 CPU 和 Memory 几乎相等
+- 对于 CPU 和 Memory 这两种最宝贵的硬件资源,
+  NUMA 用近乎严格的方式划分了所属的资源组 (node), 而每个资源组内的 CPU 和 Memory 几乎相等
 - 资源组的数量取决于物理 CPU 的个数
 - distance 用来定义各个node之间调用资源的开销, 为资源调度优化算法提供数据支持
 
