@@ -4,7 +4,8 @@
 
 ### Installation
 
-[Installation Tutorial](https://liam0205.me/texlive)
+- [Windows Installation Tutorial](https://liam0205.me/texlive)
+- [Linux Installation Tutorial](https://stone-zeng.github.io/fduthesis/2018-05-13-install-texlive-ubuntu/)
 
 ```bash
 sudo apt-get install libdigest-perl-md5-perl perl-tk
@@ -17,6 +18,21 @@ sudo umount /mnt/iso
 export MANPATH=${MANPATH}:/usr/local/texlive/2018/texmf-dist/doc/man
 export INFOPATH=${INFOPATH}:/usr/local/texlive/2018/texmf-dist/doc/info
 export PATH=${PATH}:/usr/local/texlive/2018/bin/x86_64-linux
+```
+
+```bash
+wget https://mirrors.tuna.tsinghua.edu.cn/CTAN/systems/texlive/tlnet/install-tl-unx.tar.gz
+tar -xzf install-tl-unx.tar.gz
+cd install-tl-201*
+sudo apt-get install perl-tk perl-doc
+sudo ./install-tl -gui -repository https://mirrors.tuna.tsinghua.edu.cn/CTAN/systems/texlive/tlnet/
+
+sudo cp /usr/local/texlive/2018/texmf-var/fonts/conf/texlive-fontconfig.conf /etc/fonts/conf.d/09-texlive.conf
+sudo fc-cache -fv
+
+sudo tlmgr option repository https://mirrors.tuna.tsinghua.edu.cn/CTAN/systems/texlive/tlnet/
+sudo tlmgr update --list
+sudo tlmgr update --self --all
 ```
 
 ### Build Script
@@ -246,7 +262,6 @@ tlmgr install <package>
 ```
 
 ```bash
-tlmgr update --self
+tlmgr update --self --all
 tlmgr update --list
-tlmgr update --all
 ```
