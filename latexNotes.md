@@ -235,3 +235,18 @@ sudo apt install abiword
 abiword --to=tex a.pdf
 ```
 
+### tlmgr
+
+```bash
+sudo apt-get install xzdec
+cd ~
+mkdir texmf
+tlmgr init-usertree
+tlmgr install <package>
+```
+
+```bash
+tlmgr update --self
+tlmgr update --list
+tlmgr update --all
+```
