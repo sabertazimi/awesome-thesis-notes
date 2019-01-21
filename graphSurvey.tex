@@ -2,7 +2,6 @@
 % !BIB program = bibtex
 
 \documentclass[UTF8,12pt,a4paper]{article}
-
 \usepackage{ctex}
 
 % layout
@@ -142,7 +141,37 @@ FPGA 定义为通信的「大管家」，不管是服务器跟服务器之间的
 不管通信还是机器学习、加密解密，算法都是很复杂的,
 如果试图用 FPGA 完全取代 CPU，势必会带来 FPGA 逻辑资源极大的浪费，也会提高 FPGA 程序的开发成本.
 更实用的做法是 FPGA 和 CPU 协同工作，局部性和重复性强的归 FPGA，复杂的归 CPU.
+\clearpage
 
+\section{Workload Characterization}
+
+\begin{compactitem}
+  \item Memory bandwidth is not fully utilized.
+  there is the potential for significant performance improvement
+  on graph codes with current off-chip memory systems.
+  \item Graph codes exhibit substantial locality.
+  Optimized graph codes experience a moderately
+  high last-level cache (LLC) hit rate.
+  \item Reorder buffer size limits achievable memory throughput.
+  The relatively high LLC hit rate implies
+  many instructions are executed for each LLC miss.
+  These instructions fill the reorder buffer in the core,
+  preventing future loads that will miss in the LLC from issuing early,
+  resulting in unused memory bandwidth.
+  \item Multithreading has limited potential for graph processing
+  Likely achievable performance with only a modest number (2) of threads per core.
+\end{compactitem}
+
+Because message-passing is far less efficient than accessing memory in contemporary systems,
+the efficiency of each core in a cluster is on average
+one to two orders-of-magnitude lower than cores in shared-memory nodes.
+This communication-bound behavior has led to
+a single SSD Node is able to outperform a medium-sized cluster~\cite{DBLP:conf/osdi/KyrolaBG12}.
+
+Graph algorithms have their scaling hampered by
+load imbalance, synchronization overheads, and non-uniform memory access (NUMA) penalties.
+Different input graph sizes and topologies can lead to
+very different conclusions for algorithms and architectures
 \clearpage
 
 \section{Graph Survey Template}
@@ -165,41 +194,6 @@ FPGA 定义为通信的「大管家」，不管是服务器跟服务器之间的
 
 \clearpage
 
-
-% \begin{table}
-%   \begin{small}    
-%     \caption{This is for long caption.}
-%     \label{tab:table}
-%     \begin{center}
-%       \begin{tabular}[c]{l|l}
-%         \hline
-%         \multicolumn{1}{c|}{\textbf{xx}} & 
-%         \multicolumn{1}{c}{\textbf{xx}} \\
-%         \hline
-% 	      a & b \\
-% 	      c & d \\
-% 	      e & f \\
-%         \hline
-%       \end{tabular}
-%     \end{center}
-%   \end{small}
-% \end{table}
-
-% \begin{algorithm}
-%   \floatname{algorithm}{算法}
-% 	\algrenewcommand\algorithmicrequire{\textbf{输入：}}
-% 	\algrenewcommand\algorithmicensure{\textbf{输出：}}
-% 	\caption{xxxxxxxxxx}
-% 	\label{alg:main}
-%   \begin{algorithmic}[1]
-%     \State \textbf{return} $state$
-% 	\end{algorithmic}  
-% \end{algorithm}
-
-% \begin{equation}
-%   \text{UCT} = \frac{w_i}{s_i} + c\sqrt{\frac{\ln{s_p}}{s_i}}
-%   \label{eq:uct}
-% \end{equation}
 
 \bibliographystyle{unsrt}
 \bibliography{bibs/graph}
