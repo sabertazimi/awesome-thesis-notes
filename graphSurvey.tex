@@ -174,10 +174,66 @@ Different input graph sizes and topologies can lead to
 very different conclusions for algorithms and architectures
 \clearpage
 
-\section{Memory Hierarchy}
-
+\section{DRAM}
+\subsection{Basis of DRAM}
+\subsubsection{Terminology}
+\begin{compactitem}
+  \item RAS: Row Address Strobe (ACT Activate DRAM page/row Command)
+  \item CAS: Column Address Strobe (READ Command)
+  \item DDR: Double-Data Rate transfers data
+  on both rising and falling edge of the clock
+  \item Channel: 一组数据信号线、对应几个槽位、对应几根内存条称为一个 channel
+  \item Bank: read out all words in parallel, 一个 bank 包含 N 个 DRAM Array
+  \item DIMM: Dual Inline Memory Module 双通道内存
+  \item channel＞DIMM＞rank＞chip＞bank＞row/column
+\end{compactitem}
+\subsubsection{Address Mapping Scheme}
+如表~\ref{tab:dram_address_mapping}所示,
+$\text{Memory Capacity} = K*L*B*R*C*V$,
+$N = CV/Z$, $CV = NZ$.
+采用 open page (keep page in DRAM row buffer) 时,
+映射为 k:l:r:b:n:z (可扩展) /r:l:b:n:k:z (高并行) (n 也等于 column, z 也等于 offset).
+采用 close page (immediately close page in DRAM row buffer) 时,
+映射为 k:l:r:n:b:z/r:n:l:b:k:z.
+Accessing different rows from one bank is slowest.
+\begin{table}
+  \begin{small}
+    \caption{DRAM Address Mapping Parameters}
+    \label{tab:dram_address_mapping}
+    \begin{center}
+      \begin{tabular}[c]{l|l}
+        \hline
+        \multicolumn{1}{c|}{\textbf{Symbol}} & 
+        \multicolumn{1}{c}{\textbf{Description}} \\
+        \hline
+        K & \# of channels in system \\
+        L & \# of ranks per channel \\
+        B & \# of banks per rank \\
+        R & \# of rows per bank \\
+        C & \# of columns per row \\
+        V & \# of bytes per column \\
+        Z & \# of bytes per cache line \\
+        N & \# of cache lines per row \\
+        \hline
+      \end{tabular}
+    \end{center}
+  \end{small}
+\end{table}
+\subsubsection{Delay Time}
+一条访存指令发到内存控制器, 它的访存延时是存在不同的可能性:
+\begin{compactitem}
+  \item row buffer hit: 从 row buffer 到把数据放在数据总线上的时延，大约 20 ns
+  \item empty row buffer: 从电容到 sense amplifier 再到 row buffer 的时序 + 从 row buffer 到数据总线时间，大约40ns
+  \item row buffer conflict: 写回时延 + empty row buffer delay, 大约60ns
+  \item CL: CAS Latency, 从 CAS 与读取命令发出到第一笔数据输出的这段时间 (READ -> data)
+  \item tRCD: RAS 到 CAS 时延 (Active -> READ)
+  \item 要切换另一行，要发 precharge 命令 (close page/row), 把数据写到 cell 里去.
+  关闭一个行需要时间, 这个时间称为 tRP, 发送 PRE/PREA 命令后 tRP 时间才可以发 ACT 命令.
+\end{compactitem}
+\subsection{Memory Controller}
+来自 CPU 的请求以执行顺序缓冲进入 transaction queue,
+这些请求被转换为 DRAM 命令并放入 command queue.
 \subsection{Landscape of DRAM-based memory}
-
 \begin{table}
   \begin{small}
     \caption{Landspace of DRAM-based memory~\cite{DBLP:journals/cal/KimYM16}}
@@ -193,15 +249,15 @@ very different conclusions for algorithms and architectures
         Graphics & GDDR5 \\
         Performance & eDRAM;RLDRAM3;WIO;WIO2;MCDRAM \\
         3D-Stakced & HBM;HMC;SBA/SSA;Staged Reads;RAIDR \\
-        Academic & SALP;TL-DRAM;RowClone;Half-DRAM;Row-Buffer Decoupling;SARP;AL-DRAM;
+        Academic & SALP/SARP;AL/TL-DRAM;RowClone;Half-DRAM;Row-Buffer Decoupling \\
         \hline
       \end{tabular}
     \end{center}
   \end{small}
 \end{table}
+\clearpage
 
 \section{Graph Survey Template}
-
 \begin{compactitem}
   \item data presentation
   \item data source
@@ -217,7 +273,6 @@ very different conclusions for algorithms and architectures
   \item books 
   \item distinction points
 \end{compactitem}
-
 \clearpage
 
 
