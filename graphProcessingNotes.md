@@ -25,6 +25,7 @@
     - [Perf Tools](#perf-tools)
     - [Parallel Programming](#parallel-programming)
     - [Other Libs](#other-libs)
+    - [DRAMSim2](#dramsim2)
     - [GCC](#gcc)
       - [strict-alias warnings](#strict-alias-warnings)
     - [Time Stamp Counter](#time-stamp-counter)
@@ -167,6 +168,10 @@ NUMA 默认的内存分配策略是优先在进程所在 CPU 的本地内存中�
 ### Other Libs
 
 - [Lib BLAS](http://www.netlib.org/blas/)
+
+### DRAMSim2
+
+- [Overview of DRAMSim2’s Memory Structure](https://cinwell.wordpress.com/2013/09/25/general-overview-of-dramsim2s-memory-structure/)
 
 ### GCC
 
