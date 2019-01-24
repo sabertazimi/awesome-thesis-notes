@@ -186,7 +186,7 @@ SRAM 做到 GB 容量几乎是不可能完成的任务.
   \item DDR: Double-Data Rate transfers data
   on both rising and falling edge of the clock
   \item Channel: 一组数据信号线、对应几个槽位、对应几根内存条称为一个 channel
-  \item Bank: read out all words in parallel, 一个 bank 包含 N 个 DRAM Array
+  \item Bank: read out all words in parallel, 一个 bank 包含 N 个 DRAM Subarray (N*row*col*1bit)
   \item DIMM: Dual Inline Memory Module 双通道内存
   \item channel＞DIMM＞rank＞chip＞bank＞row/column
 \end{compactitem}
