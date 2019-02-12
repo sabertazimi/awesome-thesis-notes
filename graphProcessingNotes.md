@@ -23,6 +23,7 @@
   - [Tools](#tools)
     - [Concurrency Lib](#concurrency-lib)
     - [Perf Tools](#perf-tools)
+    - [Hardware Performance Counter](#hardware-performance-counter)
     - [Parallel Programming](#parallel-programming)
     - [Other Libs](#other-libs)
     - [DRAMSim2](#dramsim2)
@@ -160,6 +161,11 @@ NUMA 默认的内存分配策略是优先在进程所在 CPU 的本地内存中�
 ### Perf Tools
 
 - [Flame Graph](https://github.com/brendangregg/FlameGraph)
+
+### Hardware Performance Counter
+
+- [Intel PCM](https://software.intel.com/en-us/articles/intel-performance-counter-monitor)
+- [PAPI](https://www.icl.utk.edu/publications/papi-portable-interface-hardware-performance-counters)
 
 ### Parallel Programming
 
