@@ -172,6 +172,22 @@ Graph algorithms have their scaling hampered by
 load imbalance, synchronization overheads, and non-uniform memory access (NUMA) penalties.
 Different input graph sizes and topologies can lead to
 very different conclusions for algorithms and architectures
+
+\subsection{Graph Background}
+Graphs can be divided into two broad categories: meshes and social networks.
+Meshes (such as road maps or the finiteelement mesh of a simulated car body)
+usually have a high diameter
+and a degree distribution that is both bounded and low.
+social networks have a low diameter (``small-world'')
+and a power-law degree distribution (``scale-free'').
+
+In a small-world graph, most nodes are not neighbors of one another,
+but most nodes can be reached from every other by a small number of hops.
+A scalefree graph has a degree distribution
+that follows a power law, at least asymptotically.
+The small-world property makes them difficult to partition,
+the scale-free property difficult to load balance a parallel execution.
+
 \clearpage
 
 \section{DRAM}
