@@ -173,9 +173,95 @@ but its degree distribution is normal rather than a power law.
 Uniform represents the most adversarial graph,
 as by design it has no locality,
 it serves to act as lower bound on performance.
+\subsection{Graph Benchmark}
+No executions sustain a high IPC and a high memory bandwidth
+(MLP, memory-level parallelism).
+A processor can only execute instructions at a high rate
+if it rarely waits on memory, and hence consumes little memory bandwidth.
+Some executions are actually in the worst lower-left quadrant,
+where they use little memory bandwidth, but their compute throughput is also low,
+presumably due to \textbf{memory latency}.
+
+TLB misses are only measurably detrimental when
+at least a moderate amount of memory bandwidth is utilized.
+
+If the processor is already achieving moderate memory bandwidth utilization,
+performance is insensitive to the branch misprediction rate.
+When the processor is not memory-bound,
+frequent branch mispredictions will hurt performance.
+
+Lower cache misses, lower memory bandwidth.
+Higher degress and scale-free graphs has lower cache misses.
+
+With more cores, this NUMA penalty is reduced,
+and for executions that use less memory bandwidth,
+the NUMA penalty is reduced further.
+Moving computation is better than moving data
+when optimizing graph processing for NUMA.
+
+Multithreading also has the potential to introduce new performance challenges.
+More threads increase parallelism, which in turn can worsen the damage
+caused by load imbalances and synchronization overheads.
+
+Many techniques can improve performance,
+but all of them will have quickly diminishing returns,
+so greatly improving performance will require a multifaceted approach.
+
+\subsubsection{Benchmark Tips}
+\begin{compactitem}
+  \item To ensure consistency across runs,
+  disable Turbo Boost (dynamic voltage and frequency scaling)
+  \item To generate more MLP,
+  add more parallel pointer chases to the same thread
+\end{compactitem}
+
 \clearpage
 
 \section{Graph Processing System}
+图计算框架核心问题:
+\begin{compactitem}
+  \item 任务划分与映射机制: TLP/DLP + mapping (programming/compiler/runtime)
+  \item 独立/统一内存地址空间
+  \item 内存数据组织: 图数据结构(CSR/Grid)/NUMA 数据放置
+  \item 并发控制与同步机制: BSP/Pull/Push/Dataflow
+\end{compactitem}
+
+图计算特点:
+\begin{compactitem}
+  \item 规模巨大
+  \item 局部性差
+  \item 耦合性强
+  \item 数据可能动态变化
+  \item 计算过程频繁迭代
+\end{compactitem}
+
+控制流体系结构为主的现代计算机系统带来了访存局部性差, 并行流水执行效率低,
+内外存通道有限以及同步的扩展性差等一系列挑战.
+随着内存性能的逐渐提高和各种新型内存技术的出现,
+图计算本身的调度和同步开销将逐渐成为新的主要性能瓶颈.
+由于受到传统控制流体系结构的限制,
+现有方案在优化手段上较为单一而难以进一步提高图计算系统的性能.
+综上所述，为实现基于异构系统的图计算的``高性能, 可扩展, 易编程''目标,
+学术界和工业界还需要在异构平台图计算协同调度, 高效的数据管理机制,
+高度抽象且易用的异构图编程框架等关键技术方面进行进一步的研究和突破.
+\subsection{图计算系统分类}
+按架构分类:
+\begin{compactitem}
+  \item 单机图计算系统: 指在单机上利用多核CPU, 大内存和多线程并行等进行大规模图计算.
+  这类系统通过减少磁盘随机写操作, 避免高昂的通信开销,
+  采用并行化技术来充分挖掘多核计算资源来处理大规模图数据,
+  在图的规模不是很大的情况下, 能在可接受的时间范围内完成任务,
+  达到与分布式大规模图计算系统相当的时间性能.
+  已有的主要单机图计算系统包括: GraphChi~\cite{DBLP:conf/osdi/KyrolaBG12},
+  X-Stream~\cite{DBLP:conf/sosp/RoyMZ13},
+  Ligra~\cite{DBLP:conf/ppopp/ShunB13},
+  TurboGraph~\cite{DBLP:conf/kdd/HanLPL0KY13},
+  FlashGraph~\cite{DBLP:conf/fast/ZhengMBVPS15},
+  GridGraph~\cite{DBLP:conf/usenix/ZhuHC15},
+  PathGraph~\cite{DBLP:journals/tpds/YuanXLJ16}.
+\end{compactitem}
+
+
 \subsection{Ligra}
 Ligra~\cite{DBLP:conf/ppopp/ShunB13} is built on
 the abstractions of edge maps and vertex maps.
