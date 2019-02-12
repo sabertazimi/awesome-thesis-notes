@@ -124,27 +124,7 @@
 
 \pagenumbering{arabic}
 
-\section{FPGA}
-
-FPGA in Data Center~\cite{DBLP:conf/isca/PutnamCCCCDEFGGHHHHKLLPPSTXB14}.
-
-\begin{compactitem}
-  \item cpu 通用
-  \item gpu 高吞吐量
-  \item fpga 低延迟
-\end{compactitem}
-
-FPGA 比 CPU 和 GPU 能效高，体系结构上的根本优势是无指令、无需共享内存.
-我们发现通过 OpenCL 写 DRAM、启动 kernel、读 DRAM 一个来回，需要 1.8 毫秒。而通过 PCIe DMA 来通信，却只要 1~2 微秒.
-在数据中心里 FPGA 的主要优势是稳定又极低的延迟，适用于流式的计算密集型任务和通信密集型任务.
-FPGA 定义为通信的「大管家」，不管是服务器跟服务器之间的通信，虚拟机跟虚拟机之间的通信，进程跟进程之间的通信，CPU 跟存储设备之间的通信，都可以用 FPGA 来加速.
-不管通信还是机器学习、加密解密，算法都是很复杂的,
-如果试图用 FPGA 完全取代 CPU，势必会带来 FPGA 逻辑资源极大的浪费，也会提高 FPGA 程序的开发成本.
-更实用的做法是 FPGA 和 CPU 协同工作，局部性和重复性强的归 FPGA，复杂的归 CPU.
-\clearpage
-
 \section{Workload Characterization}
-
 \begin{compactitem}
   \item Memory bandwidth is not fully utilized.
   there is the potential for significant performance improvement
@@ -188,9 +168,56 @@ that follows a power law, at least asymptotically.
 The small-world property makes them difficult to partition,
 the scale-free property difficult to load balance a parallel execution.
 
+Uniform graph is low diameter, like a social network,
+but its degree distribution is normal rather than a power law.
+Uniform represents the most adversarial graph,
+as by design it has no locality,
+it serves to act as lower bound on performance.
+\clearpage
+
+\section{Graph Processing System}
+\subsection{Ligra}
+Ligra~\cite{DBLP:conf/ppopp/ShunB13} is built on
+the abstractions of edge maps and vertex maps.
+When applying these map functions,
+Ligra uses heuristics to determine in
+which direction to apply them (push or pull)
+and what data structures to use (sparse or dense).
+These optimizations make Ligra especially well suited for low-diameter graphs.
+\subsection{Galois}
+Galois~\cite{DBLP:conf/sosp/NguyenLP13}
+are designed to handle irregular fine-grained task parallelism.
+Algorithms implemented in Galois
+are free to use autonomous scheduling (no synchronization barriers),
+which reduce the synchronization needed for high-diameter graphs.
+\clearpage
+
+\section{FPGA}
+FPGA in Data Center~\cite{DBLP:conf/isca/PutnamCCCCDEFGGHHHHKLLPPSTXB14}.
+
+\begin{compactitem}
+  \item cpu 通用
+  \item gpu 高吞吐量
+  \item fpga 低延迟
+\end{compactitem}
+
+FPGA 比 CPU 和 GPU 能效高，体系结构上的根本优势是无指令、无需共享内存.
+我们发现通过 OpenCL 写 DRAM、启动 kernel、读 DRAM 一个来回，需要 1.8 毫秒。而通过 PCIe DMA 来通信，却只要 1~2 微秒.
+在数据中心里 FPGA 的主要优势是稳定又极低的延迟，适用于流式的计算密集型任务和通信密集型任务.
+FPGA 定义为通信的「大管家」，不管是服务器跟服务器之间的通信，虚拟机跟虚拟机之间的通信，进程跟进程之间的通信，CPU 跟存储设备之间的通信，都可以用 FPGA 来加速.
+不管通信还是机器学习、加密解密，算法都是很复杂的,
+如果试图用 FPGA 完全取代 CPU，势必会带来 FPGA 逻辑资源极大的浪费，也会提高 FPGA 程序的开发成本.
+更实用的做法是 FPGA 和 CPU 协同工作，局部性和重复性强的归 FPGA，复杂的归 CPU.
 \clearpage
 
 \section{DRAM}
+Core (核) 代表一个独立的 CPU, Socket (颗) 本意是插槽,
+代表一个主板上的芯片, 多核架构就是在一个芯片上放多个处理器,
+2颗4核, 代表主板上有 2 个芯片插槽, 每个芯片上存在 4 个 CPU, 所以有 8 个物理 CPU,
+如果存在超线程, 还可能多出 8 个逻辑 CPU, 总共 16 个逻辑 CPU.
+一个逻辑 CPU（LCPU）能运行一个进程或线程, 如果每核能执行 2 个或更多的线程,
+那么一定使用了超线程技术, 否则每一核就只能运行一个线程或进程.
+
 SRAM 容量太难做大, CPU 一半以上的面积都用来做 SRAM.
 SRAM 面积越大, 速度就越慢.
 SRAM 做到 GB 容量几乎是不可能完成的任务.
@@ -280,7 +307,6 @@ Accessing different rows from one bank is slowest.
   \item AddressMapping.cpp: 物理地址到内存 (rank/bank/row/col/offset) 的映射关系
   \item TraceBasedSim.cpp: trace file (.trc) 相关代码
 \end{compactitem}
-
 \clearpage
 
 \section{Graph Survey Template}
@@ -300,7 +326,6 @@ Accessing different rows from one bank is slowest.
   \item distinction points
 \end{compactitem}
 \clearpage
-
 
 \bibliographystyle{unsrt}
 \bibliography{bibs/graph}
