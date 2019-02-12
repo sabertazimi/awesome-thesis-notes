@@ -56,6 +56,7 @@
 \renewcommand\cftsubsubsecdotsep{\cftdot}
 \renewcommand{\contentsname}{\hfill\bfseries\Large Contents\hfill}   
 \setlength{\cftbeforesecskip}{10pt}
+\setcounter{tocdepth}{2}
 
 % figures
 \usepackage{graphicx}
@@ -153,6 +154,12 @@ load imbalance, synchronization overheads, and non-uniform memory access (NUMA) 
 Different input graph sizes and topologies can lead to
 very different conclusions for algorithms and architectures
 
+\subsection{Graph Representation}
+CSR 行压缩使得顶点的出边被连续存储, CSC 列压缩使得顶点的入边被连续存储,
+若仅使用行压缩, 则可以连续地访问顶点的出边而需要随机访问顶点的入边.
+若同时使用行压缩和列压缩, 则图中所有的边将被存储两份,
+当修改边的值时, 存在数据同步的问题.
+
 \subsection{Graph Background}
 Graphs can be divided into two broad categories: meshes and social networks.
 Meshes (such as road maps or the finiteelement mesh of a simulated car body)
@@ -206,7 +213,6 @@ caused by load imbalances and synchronization overheads.
 Many techniques can improve performance,
 but all of them will have quickly diminishing returns,
 so greatly improving performance will require a multifaceted approach.
-
 \subsubsection{Benchmark Tips}
 \begin{compactitem}
   \item To ensure consistency across runs,
@@ -214,7 +220,6 @@ so greatly improving performance will require a multifaceted approach.
   \item To generate more MLP,
   add more parallel pointer chases to the same thread
 \end{compactitem}
-
 \clearpage
 
 \section{Graph Processing System}
@@ -235,8 +240,14 @@ so greatly improving performance will require a multifaceted approach.
   \item 计算过程频繁迭代
 \end{compactitem}
 
+高能效的大规模图计算
+系统本质上主要包含两方面挑战:
+处理引擎, 如何高效地处理图数据;
+底层存储, 如何高效地存储和快速地访问图数据.
+
 控制流体系结构为主的现代计算机系统带来了访存局部性差, 并行流水执行效率低,
 内外存通道有限以及同步的扩展性差等一系列挑战.
+在内存带宽不足的情况下, 内存带宽是图数据处理任务的主要瓶颈.
 随着内存性能的逐渐提高和各种新型内存技术的出现,
 图计算本身的调度和同步开销将逐渐成为新的主要性能瓶颈.
 由于受到传统控制流体系结构的限制,
@@ -244,6 +255,7 @@ so greatly improving performance will require a multifaceted approach.
 综上所述，为实现基于异构系统的图计算的``高性能, 可扩展, 易编程''目标,
 学术界和工业界还需要在异构平台图计算协同调度, 高效的数据管理机制,
 高度抽象且易用的异构图编程框架等关键技术方面进行进一步的研究和突破.
+
 \subsection{图计算系统分类}
 按架构分类:
 \begin{compactitem}
@@ -255,12 +267,72 @@ so greatly improving performance will require a multifaceted approach.
   已有的主要单机图计算系统包括: GraphChi~\cite{DBLP:conf/osdi/KyrolaBG12},
   X-Stream~\cite{DBLP:conf/sosp/RoyMZ13},
   Ligra~\cite{DBLP:conf/ppopp/ShunB13},
+  Galois~\cite{DBLP:conf/sosp/NguyenLP13},
   TurboGraph~\cite{DBLP:conf/kdd/HanLPL0KY13},
   FlashGraph~\cite{DBLP:conf/fast/ZhengMBVPS15},
   GridGraph~\cite{DBLP:conf/usenix/ZhuHC15},
   PathGraph~\cite{DBLP:journals/tpds/YuanXLJ16}.
+  \item 分布式图计算系统: Pregel~\cite{DBLP:conf/sigmod/MalewiczABDHLC10},
+  GraphLab~\cite{DBLP:journals/pvldb/LowGKBGH12},
+  PowerGraph~\cite{DBLP:conf/osdi/GonzalezLGBG12},
+  Gemini~\cite{DBLP:conf/osdi/ZhuCZM16}.
 \end{compactitem}
 
+按计算模型分类:
+\begin{compactitem}
+  \item BSP
+  \item 以顶点为中心的 GAS, 可以 CSR/CSC 压缩, 可以快速地遍历顶点的边 (高效 Gather), 不需要原子操作
+  数据预处理时, 对边集进行排序消耗可观; 
+  需要随机访问邻接节点, 当邻接节点不在内存时会产生磁盘随机访问
+  \item 以边为中心的 GAS. 边集 E 远大于顶点集 V, 可以降低通信开销.
+  虽然可以处理无序边, 但无法压缩;
+  若多条边访问同一节点, 需要原子操作
+  \item 以顶点为中心 GAS 计算模式适用于度高的顶点 (特别对于 Gather, 可以大量减少访存),
+  而以边为中心 GAS 计算模式适用于度低的顶点
+\end{compactitem}
+
+
+\subsection{GraphChi}
+GraphChi~\cite{DBLP:conf/osdi/KyrolaBG12}具有以下特点:
+\begin{compactitem}
+  \item 以顶点为中心的 GAS 模型核外单机图计算系统
+  \item 将连续顶点集划分为 P 个 interval， 每个 interval 对应一个 shard,
+  存储着所有入边 (即一个 shard 对应一个子图, 边以源点排序保存)
+  \item 利用 PSW (parallel sliding window) 每次访问一个 shard 中所有边与其他 shards 中的出边
+  \item `input --(create shards)--> shards --(run algorithm)--> output`
+  \item 尽管需要进行预处理 (创建 shards, 排序等), 但对于需要长期运行的系统而言, 这仅仅需要进行非常少的次数 (one time cost)
+  \item 通过 CSR + PSW 结合, 使得 Gather 阶段顺序访问节点的入边 (遍历所属 interval 的整个 shard)
+  Scatter 阶段顺序访问节点的出边 (由于 shard 内部按源点顺序排列, 所以只需遍历其他 interval 的部分 shard)
+\end{compactitem}
+\subsubsection{Shortcoming}
+\begin{compactitem}
+  \item 构建 shard 是需要对边按源顶点排序，这样耗费了大量的预处理时间，PWS 对计算密集型的算法更有利
+  \item 另外在构建子图时出现大量的随机访存现象，通过顺序地更新子图内有共享边顶点来避免数据争用问题
+  \item GraphChi 计算过程和磁盘 I/O 访问之间串行执行, 可以通过重叠这两部分进一步提升性能
+\end{compactitem}
+
+\subsection{X-Stream}
+X-Stream~\cite{DBLP:conf/sosp/RoyMZ13}具有以下特点:
+\begin{compactitem}
+  \item 以边为中心的 GAS 模型核外单机图计算系统
+  \item 将边划分为多个流式分区 (分区内无需排序), 顺序化地访问每个分区中的所有边
+  \item 随机访问快速存储介质中的数据 (如顶点数据), 顺序访问慢速存储介质中的数据 (如边数据)
+  \item `input --(run algorithm)--> output`
+  \item 没有预处理开销
+\end{compactitem}
+\subsubsection{Shortcoming}
+\begin{compactitem}
+  \item X-Stream在计算过程中，每轮迭代产生的更新集非常庞大，接近于边的数量级
+  \item 需要对更新集中的边进行 shuffle 操作
+  \item 缺乏选择调度机制，产生了大量的无用计算
+\end{compactitem}
+
+\subsection{TurboGraph}
+TurboGraph~\cite{DBLP:conf/kdd/HanLPL0KY13}设计了一种页结构,
+只需加载部分图结构,基于 pin-and-slide 模型, 设计了两种不同类型的线程，
+即执行线程和回调线程, 且执行线程和 I/O 回调线程可以并行处理,
+从而提高了线程间的并行度, 避免了迭代过程中大量中间结果访问磁盘开销,
+并利用固态硬盘实现磁盘读写和计算的并行化, 提高了图计算的整体性能。
 
 \subsection{Ligra}
 Ligra~\cite{DBLP:conf/ppopp/ShunB13} is built on
@@ -270,12 +342,111 @@ Ligra uses heuristics to determine in
 which direction to apply them (push or pull)
 and what data structures to use (sparse or dense).
 These optimizations make Ligra especially well suited for low-diameter graphs.
+
 \subsection{Galois}
 Galois~\cite{DBLP:conf/sosp/NguyenLP13}
 are designed to handle irregular fine-grained task parallelism.
 Algorithms implemented in Galois
 are free to use autonomous scheduling (no synchronization barriers),
 which reduce the synchronization needed for high-diameter graphs.
+
+\subsection{FlashGraph}
+FlashGraph~\cite{DBLP:conf/fast/ZhengMBVPS15}
+是一个能在固态硬盘阵列上处理具有万亿节点的半外存的单机图计算系统.
+
+\subsection{GridGraph}
+\subsubsection{Motivation}
+GridGraph~\cite{DBLP:conf/usenix/ZhuHC15} 是以边为中心的核外单机图计算系统,
+基于 X-stream, 能否进行实时更新, 从而进一步减少 I/O 开销:
+将 scatter 阶段的顺序化写入与 gather 阶段的顺序化读出进行一定程度上地合并,
+即合并 updates 操作
+\subsubsection{Solution}
+\begin{compactitem}
+  \item 在进行流式分区时, 保证 scatter 阶段的源顶点与 gather 阶段的目的顶点的局部性 (使其位于同一个 streaming partion)
+  \item 利用 Grid Representation 可以达到这一目的:
+  两级结构的分区 (2-level hierarchical partitioning) + 双滑动窗口 (Dual sliding windows)
+\end{compactitem}
+\subsubsection{Grid Representation}
+\begin{compactitem}
+  \item 将顶点划分为 P 个相等的 chunks
+  \item 将边划分为 P x P 个 blocks: 边源顶点所在的chunk决定其在网格中的行，边目的顶点所在的chunk决定其在网格中的列
+\end{compactitem}
+第 n 行中的边的源顶点应为 chunk-n 中的顶点,
+第 n 列中的边的目的顶点应为 chunk-n 中的顶点: 第 (m, n) 个 block 中的边的源顶点应为 chunk-m 中的顶点,
+目的顶点应为 chunk-n 中的顶点
+\subsubsection{Dual Sliding Windows}
+\begin{compactitem}
+  \item 以列优先的顺序逐块遍历 edge blocks (自上至下, 自左至右)
+  \item 以列优先的顺序遍历时, 可以减少写带宽 (gather 阶段的 updates)
+\end{compactitem}
+\subsubsection{Selective Scheduling}
+跳过不具有活跃边的 blocks, 减少不必要的 I/O
+\subsubsection{2-Level Hierarchical Partitioning}
+将每个 Block 进行进一步的 Grid 划分
+\subsubsection{GridGraph Shortcoming}
+\begin{compactitem}
+  \item 折线式的边 block 遍历策略不能达到最大化的Cache/Memory命中率
+\end{compactitem}
+
+\subsection{PathGraph}
+PathGraph~\cite{DBLP:journals/tpds/YuanXLJ16}
+是一个采用路径中心计算模型的单机图计算系统, 通过构建前向边遍历树和后向边遍历树,
+将图算法的每次迭代计算分解为沿前向边遍历树更新数据和沿后向边遍历树收集消息的两步操作.
+
+\subsection{Pregel}
+Pregel~\cite{DBLP:conf/sigmod/MalewiczABDHLC10}
+是一种基于 BSP 模型, 以顶点为中心的分布式图处理系统.
+BSP 模型是一种基于消息通信的并行计算模型,
+计算由一系列称为超步 (Superstep) 的通过全局同步分开的计算步骤组成,
+采用块间同步处理, 块内异步并行的计算.
+并行任务按照超步组织, 接收来自上一个超步的消息, 执行本地计算并发送消息给下一个超步.
+每个超步包含了三个过程:
+\begin{compactitem}
+  \item 本地计算: 每个工作节点读取其本地数据异步地执行计算
+  \item 消息通信: 
+  每个参与计算的工作节点将消息发给与之相连的其它工作节点以相互交换所需的数据
+  \item 路障同步: 用于数据的全局同步，即块间同步，
+  每个工作节点在更新完自身的消息缓存并确一个超步
+\end{compactitem}
+由于超步中每个节点上的本地计算的执行时间不等, 进度不统一, 
+全局路障同步将会导致大量节点进入等待状态, 形成快等慢的局面,
+进而产生``木桶效应'', 造成计算资源的浪费.
+且这种方式的工作节点间的通信量较多, 也会加大时间开销.
+基于 BSP 模型的分布式图计算系统在处理具有幂率分布的图时效率较低.
+
+\subsection{GraphLab}
+GraphLab~\cite{DBLP:journals/pvldb/LowGKBGH12}
+是一种基于 GAS 模型的分布式图处理系统,
+对 BSP 模型进行进一步细化, 提高并行度.
+其采用异步执行模式, 即可以使用相邻顶点或边中存储的最新数据来更新当前顶点状态.
+采用异步模式将不可避免的面临数据竞争问题, 例如:
+正在处理顶点 V 的函数需要访问邻接顶点,
+而邻接顶点此刻正在更新其状态;
+各自处理不同顶点的多个函数可能出现同时写共享数据.
+为了保证顺序一致性, 即所有的并行执行操作都有一个等价的顺序执行操作序列与之对应,
+从而确保并行执行与顺序执行都产生相同的结果.
+这就要求存在数据竞争的顶点之间需要按照一定的顺序串行执行,
+GraphLab 利用顶点着色、分布式锁等机制来确保存在竞态的顶点被顺序执行,
+而不存在竞态的顶点能够被并行执行.
+GraphLab 将需要被处理的顶点置入集合 T, 从集合 T 中取出顶点进行处理,
+同时将 Receiver 从 T 中移出, 需要被处理的顶点又被动态地加入到集合 T 中.
+当集合 T 为空时, 执行结束.
+
+\subsection{PowerGraph}
+PowerGraph~\cite{DBLP:conf/osdi/GonzalezLGBG12}
+基于 GraphLab, 利用``长尾''现象来优化子图划分,
+尽可能地实现负载均衡和最小化通信与存储开销.
+其提出了顶点分割方案, 即对于度较高的顶点进行分割,
+分割开来的边被放置到不同的节点, 每个节点只需要维护被分割的顶点的镜像即可.
+
+GAS 模型具有更好的灵活性, 适应大多数图算法,
+并发任务间不需要数据同步过程, 每个并发任务在任意时刻都可以对全局参数进行读和更新,
+这提升了计算资源的利用率和整体任务的执行效率.
+但是仍有一定的缺陷: 假设某些任务由于硬件故障或者机器负载高,
+在迭代次数上严重滞后于其它任务, 则有可能使正确性无法得到完全保证.
+
+\subsection{Gemini}
+Gemini~\cite{DBLP:conf/osdi/ZhuCZM16}.
 \clearpage
 
 \section{FPGA}
@@ -294,6 +465,35 @@ FPGA 定义为通信的「大管家」，不管是服务器跟服务器之间的
 不管通信还是机器学习、加密解密，算法都是很复杂的,
 如果试图用 FPGA 完全取代 CPU，势必会带来 FPGA 逻辑资源极大的浪费，也会提高 FPGA 程序的开发成本.
 更实用的做法是 FPGA 和 CPU 协同工作，局部性和重复性强的归 FPGA，复杂的归 CPU.
+
+\subsection{Tesseract}
+Tesseract~\cite{DBLP:conf/isca/AhnHYMC15}其是一个由 16 个立方构成的立方网络.
+每个立方是一个混合内存立方体(HMC, Hybrid Memory Cube), 具有 512 GB/s 内部内存带宽.
+每个混合内存立方体由 32 个垂直切片构成, 将每个垂直切片称为一个 vault, 多个 vault 间通过交叉开关网络连接.
+每个 vault 包含一个 16 个块的 DRAM 分区, 一个专用内存控制和一个轻量级通用处理器.
+Tesseract 具有 8 TB/s (16 x 512 GB/s) 内部内存带宽, 具有 16 x 32 = 512 个通用处理器.
+在开始处理图数据前, 按照一定的划分规则将图数据划分为 512 个子图, 每个 vault 对应一个子图.
+
+\subsection{EEAGAA}
+EEAGAA~\cite{DBLP:conf/isca/OzdalYKAGBO16} 采用以顶点为中心计算模式,
+并采用行压缩 (CSR) 格式来表示图数据, 在执行图算法时, 遵循 GAS模型, 并 支持 异步执行模式.
+其内部包括片上缓存、访存请求处理、活跃顶点列表管理、运行时管理部件、
+信息收集计算部件、顶点状态更新计算部件、信息扩散计算部件和同步部件.
+
+\subsection{Graphicionado}
+Graphicionado~\cite{DBLP:conf/micro/HamWSSM16}
+是一个采用以边为中心, 遵循同步执行模式的图计算加速器,
+其指出当前的通用处理器不是进行图数据处理的理想平台，主要原因包
+括：
+\begin{compactitem}
+  \item 访存粒度过大, 导致片外访存带宽被浪费.
+  通用处理器从内存载入或存储数据的粒度是缓存行,
+  一个缓存行的大小一般为 64 字节, 而图算法访问数据的粒度一般为 4 字节
+  \item 低效的片上缓存使用. 通用处理器不能有效地将局部性高的数据存储于片上缓存中
+  \item 不匹配的执行粒度. 通用处理器使用指令来完成计算和访存操作,
+  对很多图算法, 绝大部分指令主要用于供给数据和移动数据, 其能效差.
+\end{compactitem}
+其建立了片上存储用于存储顶点信息, 同时降低访存粒度, 设计硬件专用流水线进行图计算.
 \clearpage
 
 \section{DRAM}
