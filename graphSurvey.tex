@@ -152,15 +152,11 @@ a single SSD Node is able to outperform a medium-sized cluster~\cite{DBLP:conf/o
 Graph algorithms have their scaling hampered by
 load imbalance, synchronization overheads, and non-uniform memory access (NUMA) penalties.
 Different input graph sizes and topologies can lead to
-very different conclusions for algorithms and architectures
+very different conclusions for algorithms and architectures.
 
-\subsection{Graph Representation}
-CSR 行压缩使得顶点的出边被连续存储, CSC 列压缩使得顶点的入边被连续存储,
-若仅使用行压缩, 则可以连续地访问顶点的出边而需要随机访问顶点的入边.
-若同时使用行压缩和列压缩, 则图中所有的边将被存储两份,
-当修改边的值时, 存在数据同步的问题.
+References from~\cite{DBLP:conf/iiswc/BeamerAP15}~\cite{DBLP:conf/usenix/MalicevicLZ17}.
 
-\subsection{Graph Background}
+\subsection{Graph Shape}
 Graphs can be divided into two broad categories: meshes and social networks.
 Meshes (such as road maps or the finiteelement mesh of a simulated car body)
 usually have a high diameter
@@ -180,7 +176,8 @@ but its degree distribution is normal rather than a power law.
 Uniform represents the most adversarial graph,
 as by design it has no locality,
 it serves to act as lower bound on performance.
-\subsection{Graph Benchmark}
+
+\subsection{Locality Benchmark}
 No executions sustain a high IPC and a high memory bandwidth
 (MLP, memory-level parallelism).
 A processor can only execute instructions at a high rate
@@ -213,13 +210,57 @@ caused by load imbalances and synchronization overheads.
 Many techniques can improve performance,
 but all of them will have quickly diminishing returns,
 so greatly improving performance will require a multifaceted approach.
-\subsubsection{Benchmark Tips}
+\subsubsection{Locality Tips}
 \begin{compactitem}
   \item To ensure consistency across runs,
   disable Turbo Boost (dynamic voltage and frequency scaling)
   \item To generate more MLP,
   add more parallel pointer chases to the same thread
 \end{compactitem}
+
+\subsection{Graph Algorithms}
+Differ in \# of active vertices per iteration:
+\begin{compactitem}
+  \item only a subset active: BFS (vertex-centric + CSR/CSC)
+  \item entire graph active: Pagerank, SpMV ...
+\end{compactitem}
+
+\subsection{Graph Representation}
+\begin{compactitem}
+  \item adjacency lists: dynamic allocation/count sort/radix sort
+  \item CSR/CSC
+\end{compactitem}
+\subsubsection{CSR/CSC}
+CSR 行压缩使得顶点的出边被连续存储, CSC 列压缩使得顶点的入边被连续存储,
+若仅使用行压缩, 则可以连续地访问顶点的出边而需要随机访问顶点的入边.
+若同时使用行压缩和列压缩, 则图中所有的边将被存储两份,
+当修改边的值时, 存在数据同步的问题.
+
+\subsection{Message Passing}
+\subsubsection{Push}
+Push information to neighbors, write to state of others:
+Good when few vertices are active, but Needs locks.
+\subsubsection{Pull}
+Pull information from neighbors, write to own state:
+Good when many vertices are active, Locks can be avoided.
+\begin{figure}
+  \begin{small}
+    \begin{center}
+      \includegraphics[width=0.95\textwidth]{figures/graph_atc17_everythinggraph1}
+    \end{center}
+    \caption{Everything in Graph Processing~\cite{DBLP:conf/usenix/MalicevicLZ17}}
+    \label{fig:everythinggraph1}
+  \end{small}
+\end{figure}
+\begin{figure}
+  \begin{small}
+    \begin{center}
+      \includegraphics[width=0.95\textwidth]{figures/graph_atc17_everythinggraph2}
+    \end{center}
+    \caption{Everything in Graph Processing System~\cite{DBLP:conf/usenix/MalicevicLZ17}}
+    \label{fig:everythinggraph2}
+  \end{small}
+\end{figure}
 \clearpage
 
 \section{Graph Processing System}
@@ -485,7 +526,7 @@ Tesseract 具有 8 TB/s (16 x 512 GB/s) 内部内存带宽, 具有 16 x 32 = 512
 
 \subsection{EEAGAA}
 EEAGAA~\cite{DBLP:conf/isca/OzdalYKAGBO16} 采用以顶点为中心计算模式,
-并采用行压缩 (CSR) 格式来表示图数据, 在执行图算法时, 遵循 GAS模型, 并 支持 异步执行模式.
+并采用行压缩 (CSR) 格式来表示图数据, 在执行图算法时, 遵循 GAS 模型, 并支持异步执行模式.
 其内部包括片上缓存、访存请求处理、活跃顶点列表管理、运行时管理部件、
 信息收集计算部件、顶点状态更新计算部件、信息扩散计算部件和同步部件.
 
@@ -516,6 +557,7 @@ Core (核) 代表一个独立的 CPU, Socket (颗) 本意是插槽,
 SRAM 容量太难做大, CPU 一半以上的面积都用来做 SRAM.
 SRAM 面积越大, 速度就越慢.
 SRAM 做到 GB 容量几乎是不可能完成的任务.
+
 \subsection{Basis of DRAM}
 \subsubsection{Terminology}
 \begin{compactitem}
@@ -571,9 +613,11 @@ Accessing different rows from one bank is slowest.
   \item 要切换另一行，要发 precharge 命令 (close page/row), 把数据写到 cell 里去.
   关闭一个行需要时间, 这个时间称为 tRP, 发送 PRE/PREA 命令后 tRP 时间才可以发 ACT 命令.
 \end{compactitem}
+
 \subsection{Memory Controller}
-来自 CPU 的请求以执行顺序缓冲进入 transaction queue,
+来自 CPU 的请求以执行顺序进入 transaction queue,
 这些请求被转换为 DRAM 命令并放入 command queue.
+
 \subsection{Landscape of DRAM-based memory}
 \begin{table}
   \begin{small}
@@ -596,6 +640,7 @@ Accessing different rows from one bank is slowest.
     \end{center}
   \end{small}
 \end{table}
+
 \subsection{Simulator}
 \subsubsection{DRAMSim2}
 \begin{compactitem}
