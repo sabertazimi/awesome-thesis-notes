@@ -307,15 +307,16 @@ Good when many vertices are active, Locks can be avoided.
   达到与分布式大规模图计算系统相当的时间性能.
   已有的主要单机图计算系统包括: GraphChi~\cite{DBLP:conf/osdi/KyrolaBG12},
   X-Stream~\cite{DBLP:conf/sosp/RoyMZ13},
+  TurboGraph~\cite{DBLP:conf/kdd/HanLPL0KY13},
   Ligra~\cite{DBLP:conf/ppopp/ShunB13},
   Galois~\cite{DBLP:conf/sosp/NguyenLP13},
-  TurboGraph~\cite{DBLP:conf/kdd/HanLPL0KY13},
   FlashGraph~\cite{DBLP:conf/fast/ZhengMBVPS15},
   GridGraph~\cite{DBLP:conf/usenix/ZhuHC15},
   PathGraph~\cite{DBLP:journals/tpds/YuanXLJ16}.
   \item 分布式图计算系统: Pregel~\cite{DBLP:conf/sigmod/MalewiczABDHLC10},
   GraphLab~\cite{DBLP:journals/pvldb/LowGKBGH12},
   PowerGraph~\cite{DBLP:conf/osdi/GonzalezLGBG12},
+  Polymer~\cite{DBLP:conf/ppopp/ZhangCC15},
   Gemini~\cite{DBLP:conf/osdi/ZhuCZM16}.
 \end{compactitem}
 
@@ -485,6 +486,9 @@ GAS 模型具有更好的灵活性, 适应大多数图算法,
 这提升了计算资源的利用率和整体任务的执行效率.
 但是仍有一定的缺陷: 假设某些任务由于硬件故障或者机器负载高,
 在迭代次数上严重滞后于其它任务, 则有可能使正确性无法得到完全保证.
+
+\subsection{Polymer}
+Polymer~\cite{DBLP:conf/ppopp/ZhangCC15}.
 
 \subsection{Gemini}
 Gemini~\cite{DBLP:conf/osdi/ZhuCZM16}.
