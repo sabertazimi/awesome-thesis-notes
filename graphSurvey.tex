@@ -186,6 +186,7 @@ if it rarely waits on memory, and hence consumes little memory bandwidth.
 Some executions are actually in the worst lower-left quadrant,
 where they use little memory bandwidth, but their compute throughput is also low,
 presumably due to \textbf{memory latency}.
+MLP ($memory bandwidth \times memory latency$) $\propto$ MPKI (misses per kilo-instructions).
 
 TLB misses are only measurably detrimental when
 at least a moderate amount of memory bandwidth is utilized.
