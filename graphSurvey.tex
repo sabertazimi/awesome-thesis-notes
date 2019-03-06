@@ -695,10 +695,13 @@ shared and local caches, local and non-local memory,
 and various cache-coherence effects.
 
 \begin{compactitem}
-  \item Use of a bitmap to mark the vertices during the visit
+  \item improve poor locality
+  \item use of a bitmap to mark the vertices during the visit
   \item FastForward queue (PPoPP'08)
-  \item Use of batching when inserting and removing
+  \item use of batching when inserting and removing
   from the inter-socket communication channel to amortize the locking overhead
+  \item software prefetching
+  \item cut off NUMA communication
 \end{compactitem}
 
 \section{Graph Survey Template}
