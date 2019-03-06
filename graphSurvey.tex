@@ -190,6 +190,9 @@ MLP ($memory bandwidth \times memory latency$) $\propto$ MPKI (misses per kilo-i
 
 TLB misses are only measurably detrimental when
 at least a moderate amount of memory bandwidth is utilized.
+Maximum bandwidth obtained with the larger array is substantially
+reduced due to increases in TLB refill time (THP is useful to MLP)
+(confirmed by performance counters).
 
 If the processor is already achieving moderate memory bandwidth utilization,
 performance is insensitive to the branch misprediction rate.
