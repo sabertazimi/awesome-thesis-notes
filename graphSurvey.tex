@@ -180,6 +180,7 @@ it serves to act as lower bound on performance.
 \subsection{Locality Benchmark}
 No executions sustain a high IPC and a high memory bandwidth
 (MLP, memory-level parallelism).
+(\textbf{tradeoff} between \textbf{computation} and \textbf{communication})
 A processor can only execute instructions at a high rate
 if it rarely waits on memory, and hence consumes little memory bandwidth.
 Some executions are actually in the worst lower-left quadrant,
@@ -652,6 +653,43 @@ Accessing different rows from one bank is slowest.
   \item TraceBasedSim.cpp: trace file (.trc) 相关代码
 \end{compactitem}
 \clearpage
+
+\section{DragonGraph}
+
+\subsection{Basic Infrastructure}
+\begin{compactitem}
+  \item Redundant CSR
+  \item vertex-centric
+  \item GAS (Async)
+  \item push (locks) when few vertices discovered (early iterations),
+  \item pull (no locks) when many vertices discovered (late iterations).
+  \item no NUMA
+  \item Verilog or Sdaccel
+\end{compactitem}
+
+\subsection{Grpah Kernels or Grpah Benckmarks}
+\begin{compactitem}
+  \item SSSP
+  \item CC
+  \item best-first search
+  \item uniform-cost search
+  \item greedy-search
+  \item A*
+\end{compactitem}
+
+\subsection{Key Optimization}
+
+Different types of locality:
+hierarchical networks, distributed,
+shared and local caches, local and non-local memory,
+and various cache-coherence effects.
+
+\begin{compactitem}
+  \item Use of a bitmap to mark the vertices during the visit
+  \item FastForward queue (PPoPP'08)
+  \item Use of batching when inserting and removing
+  from the inter-socket communication channel to amortize the locking overhead
+\end{compactitem}
 
 \section{Graph Survey Template}
 \begin{compactitem}
