@@ -210,7 +210,13 @@ when optimizing graph processing for NUMA.
 
 Multithreading also has the potential to introduce new performance challenges.
 More threads increase parallelism, which in turn can worsen the damage
-caused by load imbalances and synchronization overheads.
+caused by \textbf{load imbalances} and \textbf{synchronization overheads}.
+If the workload of the two threads is heterogenous it is possible
+for an SMT core to exceed MLP/IPM model.
+One thread could generate most of the cache misses
+sustaining a high effective MLP
+while the other thread (unencumbered by cache misses)
+could execute instructions quickly to increase IPM.
 
 Many techniques can improve performance,
 but all of them will have quickly diminishing returns,
