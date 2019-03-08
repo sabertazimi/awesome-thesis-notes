@@ -502,7 +502,35 @@ GAS 模型具有更好的灵活性, 适应大多数图算法,
 Polymer~\cite{DBLP:conf/ppopp/ZhangCC15}.
 
 \subsection{Gemini}
-Gemini~\cite{DBLP:conf/osdi/ZhuCZM16}.
+Gemini~\cite{DBLP:conf/osdi/ZhuCZM16} major optimizations:
+\begin{compactitem}
+  \item efficiency: adaptive push-/pull-style computation
+  \item efficiency: hierarchical chunk-based	partitioning
+  \item scalability: locality-aware	chunking
+  \item scalability: chunk-based work-stealing
+\end{compactitem}
+
+Sparse mode for push operations, dense mode for pull operations (locks-free).
+When it comes to distributed push/pull mode,
+masters	push message to mirrors, who update	their	local	neighbors.
+mirrors	pull updates from	neighbors, then	message	remote masters.
+
+Divide vertex	set into contiguous chunks.
+Chunk-based partitioning preserves locality.
+It's affordable	for preprocessing	when vertices	unordered.
+Per-node partition, per-socket partition, per-core work chunk
+(work partitioning within socket, mini-chunk for work-stealing).
+
+Gemini organizes outgoing edges in the Compressed Sparse Row (CSR)
+and incoming ones in the Compressed Sparse Column (CSC) format.
+
+Gemini considers both	vertex and edge:
+\begin{compactitem}
+  \item Edge:	the	amount of	work to	be processed
+  \item Vertex:	the	processing speed of	work (locality)
+  \item Hybrid metric: $\alpha \cdot \vert V_i \vert + \vert E_i \vert$
+\end{compactitem}
+
 \clearpage
 
 \section{FPGA}
