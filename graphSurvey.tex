@@ -290,6 +290,11 @@ Good when many vertices are active, Locks can be avoided.
   \item 耦合性强
   \item 数据可能动态变化
   \item 计算过程频繁迭代
+  \item intensive data access:
+  most of the operations in graph processing are related to data accesses
+  \item irregular computation: poor workloads balance (power-law distribution)
+  \item poor locality: high memory access overhead
+  \item high data dependency: make it difficult to explore the parallelism 
 \end{compactitem}
 
 高能效的大规模图计算
@@ -560,6 +565,18 @@ FPGA 定义为通信的\textbf{大管家}, 不管是服务器跟服务器之间�
 从第一代装满 FPGA 的专用服务器集群, 到第二代通过专网连接的 FPGA 加速卡集群 (8x6),
 到目前复用数据中心网络的大规模 FPGA 云 (FPGA 部署在网卡和交换机之间).
 
+Massive parallelism can be easily achieved when these resources are in good use.
+For improving the locality of vertices on the BRAM,
+fine grained partitioning and dedicated data placement strategies
+are needed to increase the reuse rate of vertices on the BRAM.
+
+Shortcoming:
+\begin{compactitem}
+  \item limited resources (BRAM, PLE)
+  \item limited frequency
+\end{compactitem}
+
+
 \subsection{Tesseract}
 Tesseract~\cite{DBLP:conf/isca/AhnHYMC15}其是一个由 16 个立方构成的立方网络.
 每个立方是一个混合内存立方体(HMC, Hybrid Memory Cube), 具有 512 GB/s 内部内存带宽.
@@ -697,7 +714,7 @@ Accessing different rows from one bank is slowest.
 
 \subsection{Basic Infrastructure}
 \begin{compactitem}
-  \item Redundant CSR
+  \item Enhanced/Redundant CSR
   \item vertex-centric
   \item GAS (Async)
   \item push (locks) when few vertices discovered (early iterations),
@@ -729,6 +746,12 @@ and various cache-coherence effects.
   from the inter-socket communication channel to amortize the locking overhead
   \item software prefetching
   \item cut off NUMA communication
+  \item parallelism: dataflow (pipelined Multiple Instructions Single Data (MISD) model)
+  \item MLP: HBM
+  \item Locality aware vertices buffer
+  \item enhanced CSR/CSC
+  \item work stealing
+  \item overlap communication and computation with multiple pipelines/boards
 \end{compactitem}
 
 \section{Graph Survey Template}
