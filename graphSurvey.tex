@@ -510,19 +510,13 @@ Gemini~\cite{DBLP:conf/osdi/ZhuCZM16} major optimizations:
   \item scalability: chunk-based work-stealing
 \end{compactitem}
 
+Gemini organizes outgoing edges in the Compressed Sparse Row (CSR)
+and incoming ones in the Compressed Sparse Column (CSC) format.
+
 Sparse mode for push operations, dense mode for pull operations (locks-free).
 When it comes to distributed push/pull mode,
 masters	push message to mirrors, who update	their	local	neighbors.
 mirrors	pull updates from	neighbors, then	message	remote masters.
-
-Divide vertex	set into contiguous chunks.
-Chunk-based partitioning preserves locality.
-It's affordable	for preprocessing	when vertices	unordered.
-Per-node partition, per-socket partition, per-core work chunk
-(work partitioning within socket, mini-chunk for work-stealing).
-
-Gemini organizes outgoing edges in the Compressed Sparse Row (CSR)
-and incoming ones in the Compressed Sparse Column (CSC) format.
 
 Gemini considers both	vertex and edge:
 \begin{compactitem}
@@ -531,6 +525,13 @@ Gemini considers both	vertex and edge:
   \item Hybrid metric: $\alpha \cdot \vert V_i \vert + \vert E_i \vert$
 \end{compactitem}
 
+Divide vertex	set into contiguous chunks.
+Chunk-based partitioning preserves locality.
+It's affordable	for preprocessing	when vertices	unordered.
+Per-node partition, per-socket partition, per-core work chunk
+(work partitioning within socket, mini-chunk for work-stealing).
+Gemini design a co-scheduling mechanism to
+overlap computation and inter-node communication tasks.
 \clearpage
 
 \section{FPGA}
