@@ -247,6 +247,21 @@ CSR 行压缩使得顶点的出边被连续存储, CSC 列压缩使得顶点的�
 若同时使用行压缩和列压缩, 则图中所有的边将被存储两份,
 当修改边的值时, 存在数据同步的问题.
 
+\subsection{Processing Model}
+Vertex-centric paradigm has expressive potentials
+to easily represent various kinds of graph algorithms,
+and the high parallelism in the grain of vertex.
+However, in the vertex-centric paradigm,
+there can be random accesses to edges,
+resulting in potentially heavy memory access overhead.
+
+Edge-centric paradigm is lack of flexible scheduling potential
+in contrast to the vertex-centric one.
+Almost all of edges have to be processed multiple times
+to complete the whole process.
+This paradigm may also lead to
+a large number of random accesses to vertices.
+
 \subsection{Message Passing}
 \subsubsection{Push}
 Push information to neighbors, write to state of others:
@@ -605,6 +620,9 @@ Graphicionado~\cite{DBLP:conf/micro/HamWSSM16}
   对很多图算法, 绝大部分指令主要用于供给数据和移动数据, 其能效差.
 \end{compactitem}
 其建立了片上存储用于存储顶点信息, 同时降低访存粒度, 设计硬件专用流水线进行图计算.
+
+\subsection{ForeGraph}
+ForeGraph~\cite{DBLP:conf/fpga/DaiHCXWY17}
 \clearpage
 
 \section{DRAM}
@@ -712,11 +730,15 @@ Accessing different rows from one bank is slowest.
 
 \section{DragonGraph}
 
+GPUs also face the drawbacks,
+e.g., control and memory divergence,
+load imbalance and global memory access overhead.
+
 \subsection{Basic Infrastructure}
 \begin{compactitem}
   \item Enhanced/Redundant CSR
   \item vertex-centric
-  \item GAS (Async)
+  \item GAS (sync)
   \item push (locks) when few vertices discovered (early iterations),
   \item pull (no locks) when many vertices discovered (late iterations).
   \item no NUMA
@@ -748,16 +770,37 @@ and various cache-coherence effects.
   \item cut off NUMA communication
   \item parallelism: dataflow (pipelined Multiple Instructions Single Data (MISD) model)
   \item MLP: HBM
-  \item Locality aware vertices buffer
+  \item coalescing multiple into single one
+  \item reshape cache hierachy
+  \item locality-aware vertices buffer
   \item enhanced CSR/CSC
   \item work stealing
   \item overlap communication and computation with multiple pipelines/boards
 \end{compactitem}
 
+\subparagraph{ILP}
+Vertex dependencies of graph can stall the pipelines
+and decrease the instruction level parallelism.
+How to reduce the impact arising from data dependencies
+remains an open problem for increasing the number of Instructions per Cycle (IPC).
+
+\subparagraph{MLP}
+Multi-bank, multi-port, optimizied memory access.
+The memory bandwidth utilization here means
+the valid values ratio per transfer.
+Random accesses in graph processing usually cause
+low ratio of valid values and result in much wasted bandwidth.
+Improving the memory bandwidth utilization can reduce the total number of memory accesses.
+
+\subparagraph{Asynchronous}
+Asynchronous mode requires tremendous efforts
+to implement on graph accelerators for the sophisticated hardware design.
+
 \section{Graph Survey Template}
 \begin{compactitem}
-  \item data presentation
-  \item data source
+  \item data presentation/layout
+  \item data ordering: index-aware/degree-aware/conflict-aware
+  \item data partition: source-oriented/destination-oriented
   \item data manipulation
   \item open source
   \item programming model
