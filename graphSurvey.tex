@@ -623,7 +623,14 @@ Graphicionado~\cite{DBLP:conf/micro/HamWSSM16}
 
 \subsection{ForeGraph}
 ForeGraph~\cite{DBLP:conf/fpga/DaiHCXWY17}
-adopts \textbf{Grid} data layout into distributed FPGA boards.
+adopts \textbf{Grid} (with sub-blocks)
+data layout into distributed FPGA boards:
+\begin{compactitem}
+  \item vertex index compression
+  \item shuffle edges
+  \item selective scheduling (skip useless/inactive blocks)
+\end{compactitem}
+
 
 \subsection{FabGraph}
 FabGraph~\cite{DBLP:conf/fpga/ShaoLHL019}
