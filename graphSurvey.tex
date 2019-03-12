@@ -623,6 +623,21 @@ Graphicionado~\cite{DBLP:conf/micro/HamWSSM16}
 
 \subsection{ForeGraph}
 ForeGraph~\cite{DBLP:conf/fpga/DaiHCXWY17}
+adopts \textbf{Grid} data layout into distributed FPGA boards.
+
+\subsection{FabGraph}
+FabGraph~\cite{DBLP:conf/fpga/ShaoLHL019}
+adopts two-level vertex caching,
+L1 vertex caches attached to pipeline sets,
+L2 vertex caches as shared vertex buffer.
+All vertex caches use BRAM.
+FabGraph use 2 pipeline sets to overlap
+communication and computation,
+enhancing bandwidth of graph progressing.
+FabGraph only needs to slide the window
+to cover the upper-triangular part or lowertriangular part of the grid,
+reduceing data transmission.
+
 \clearpage
 
 \section{DRAM}
