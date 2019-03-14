@@ -591,7 +591,52 @@ Shortcoming:
   \item limited frequency
 \end{compactitem}
 
+\subsection{CyGraph}
+CyGraph~\cite{DBLP:conf/ipps/AttiaJTJZ14}
+targets to BFS algorithm.
 
+\subsection{FPGP}
+In FPGP~\cite{DBLP:conf/fpga/DaiCWY16},
+there is a Shared-Vertex Memory (SVM) connected to all FPGAs.
+Such implementation limits the scalability to multi-FPGA
+because the total bandwidth of SVM is limited.
+
+\subsection{ForeGraph}
+ForeGraph~\cite{DBLP:conf/fpga/DaiHCXWY17}
+adopts \textbf{Grid} (with sub-blocks)
+data layout into distributed FPGA boards:
+\begin{compactitem}
+  \item use BRAM as vertex buffer (source/destination)
+  \item hash-based vertex partitioning
+  \item vertex index compression: reduce data szie
+  \item shuffle edges to fully utilize all PEs, reduce IDLE PEs.
+  Avoid the case that few PEs are overburdened,
+  while others are idle waiting edges.
+  \item selective scheduling (skip useless/inactive blocks):
+  load fewer edges from the off-chip memory and
+  skip (sub-) blocks which are unnecessary to be transmitted.
+\end{compactitem}
+
+\subsection{FabGraph}
+FabGraph~\cite{DBLP:conf/fpga/ShaoLHL019}
+only needs to slide the window
+to cover the upper-triangular part or lowertriangular part of the grid,
+reduceing data transmission.
+
+FabGraph adopts hash-based vertex partitioning.
+
+FabGraph adopts two-level vertex caching,
+L1 vertex caches attached to pipeline sets,
+L2 vertex caches as shared vertex buffer.
+All vertex caches use BRAM.
+
+FabGraph use 2 pipeline sets to overlap
+communication and computation,
+enhancing bandwidth of graph progressing.
+
+\clearpage
+
+\section{ASIC}
 \subsection{Tesseract}
 Tesseract~\cite{DBLP:conf/isca/AhnHYMC15}其是一个由 16 个立方构成的立方网络.
 每个立方是一个混合内存立方体(HMC, Hybrid Memory Cube), 具有 512 GB/s 内部内存带宽.
@@ -620,43 +665,6 @@ Graphicionado~\cite{DBLP:conf/micro/HamWSSM16}
   对很多图算法, 绝大部分指令主要用于供给数据和移动数据, 其能效差.
 \end{compactitem}
 其建立了片上存储用于存储顶点信息, 同时降低访存粒度, 设计硬件专用流水线进行图计算.
-
-\subsection{FPGP}
-In FPGP~\cite{DBLP:conf/fpga/DaiCWY16},
-there is a Shared-Vertex Memory (SVM) connected to all FPGAs.
-Such implementation limits the scalability to multi-FPGA
-because the total bandwidth of SVM is limited.
-
-\subsection{ForeGraph}
-ForeGraph~\cite{DBLP:conf/fpga/DaiHCXWY17}
-adopts \textbf{Grid} (with sub-blocks)
-data layout into distributed FPGA boards:
-\begin{compactitem}
-  \item use BRAM as vertex buffer (source/destination)
-  \item hash-based vertex partitioning
-  \item vertex index compression
-  \item shuffle edges to fully utilize all PEs,
-  reduce IDLE PEs.
-  \item selective scheduling (skip useless/inactive blocks)
-\end{compactitem}
-
-
-\subsection{FabGraph}
-FabGraph~\cite{DBLP:conf/fpga/ShaoLHL019}
-only needs to slide the window
-to cover the upper-triangular part or lowertriangular part of the grid,
-reduceing data transmission.
-
-FabGraph adopts hash-based vertex partitioning.
-
-FabGraph adopts two-level vertex caching,
-L1 vertex caches attached to pipeline sets,
-L2 vertex caches as shared vertex buffer.
-All vertex caches use BRAM.
-
-FabGraph use 2 pipeline sets to overlap
-communication and computation,
-enhancing bandwidth of graph progressing.
 
 \clearpage
 
