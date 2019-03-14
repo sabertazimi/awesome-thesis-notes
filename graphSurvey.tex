@@ -224,22 +224,22 @@ so greatly improving performance will require a multifaceted approach.
 \subsubsection{Locality Tips}
 \begin{compactitem}
   \item To ensure consistency across runs,
-  disable Turbo Boost (dynamic voltage and frequency scaling)
+  disable Turbo Boost (dynamic voltage and frequency scaling).
   \item To generate more MLP,
-  add more parallel pointer chases to the same thread
+  add more parallel pointer chases to the same thread.
 \end{compactitem}
 
 \subsection{Graph Algorithms}
 Differ in \# of active vertices per iteration:
 \begin{compactitem}
-  \item only a subset active: BFS (vertex-centric + CSR/CSC)
+  \item only a subset active: BFS (vertex-centric + CSR/CSC).
   \item entire graph active: Pagerank, SpMV ...
 \end{compactitem}
 
 \subsection{Graph Representation}
 \begin{compactitem}
-  \item adjacency lists: dynamic allocation/count sort/radix sort
-  \item CSR/CSC
+  \item adjacency lists: dynamic allocation/count sort/radix sort.
+  \item CSR/CSC.
 \end{compactitem}
 \subsubsection{CSR/CSC}
 CSR 行压缩使得顶点的出边被连续存储, CSC 列压缩使得顶点的入边被连续存储,
@@ -292,24 +292,24 @@ Good when many vertices are active, Locks can be avoided.
 \section{Graph Processing System}
 图计算框架核心问题:
 \begin{compactitem}
-  \item 任务划分与映射机制: TLP/DLP + mapping (programming/compiler/runtime)
-  \item 独立/统一内存地址空间
-  \item 内存数据组织: 图数据结构(CSR/Grid)/NUMA 数据放置
-  \item 并发控制与同步机制: BSP/Pull/Push/Dataflow
+  \item 任务划分与映射机制: TLP/DLP + mapping (programming/compiler/runtime).
+  \item 独立/统一内存地址空间.
+  \item 内存数据组织: 图数据结构(CSR/Grid)/NUMA 数据放置.
+  \item 并发控制与同步机制: BSP/Pull/Push/Dataflow.
 \end{compactitem}
 
 图计算特点:
 \begin{compactitem}
-  \item 规模巨大
-  \item 局部性差
-  \item 耦合性强
-  \item 数据可能动态变化
-  \item 计算过程频繁迭代
+  \item 规模巨大.
+  \item 局部性差.
+  \item 耦合性强.
+  \item 数据可能动态变化.
+  \item 计算过程频繁迭代.
   \item intensive data access:
-  most of the operations in graph processing are related to data accesses
-  \item irregular computation: poor workloads balance (power-law distribution)
-  \item poor locality: high memory access overhead
-  \item high data dependency: make it difficult to explore the parallelism 
+  most of the operations in graph processing are related to data accesses.
+  \item irregular computation: poor workloads balance (power-law distribution).
+  \item poor locality: high memory access overhead.
+  \item high data dependency: make it difficult to explore the parallelism.
 \end{compactitem}
 
 高能效的大规模图计算
@@ -353,51 +353,51 @@ Good when many vertices are active, Locks can be avoided.
 
 按计算模型分类:
 \begin{compactitem}
-  \item BSP
+  \item BSP.
   \item 以顶点为中心的 GAS, 可以 CSR/CSC 压缩, 可以快速地遍历顶点的边 (高效 Gather), 不需要原子操作
   数据预处理时, 对边集进行排序消耗可观; 
-  需要随机访问邻接节点, 当邻接节点不在内存时会产生磁盘随机访问
+  需要随机访问邻接节点, 当邻接节点不在内存时会产生磁盘随机访问.
   \item 以边为中心的 GAS. 边集 E 远大于顶点集 V, 可以降低通信开销.
   虽然可以处理无序边, 但无法压缩;
-  若多条边访问同一节点, 需要原子操作
+  若多条边访问同一节点, 需要原子操作.
   \item 以顶点为中心 GAS 计算模式适用于度高的顶点 (特别对于 Gather, 可以大量减少访存),
-  而以边为中心 GAS 计算模式适用于度低的顶点
+  而以边为中心 GAS 计算模式适用于度低的顶点.
 \end{compactitem}
 
 
 \subsection{GraphChi}
 GraphChi~\cite{DBLP:conf/osdi/KyrolaBG12}具有以下特点:
 \begin{compactitem}
-  \item 以顶点为中心的 GAS 模型核外单机图计算系统
+  \item 以顶点为中心的 GAS 模型核外单机图计算系统.
   \item 将连续顶点集划分为 P 个 interval， 每个 interval 对应一个 shard,
-  存储着所有入边 (即一个 shard 对应一个子图, 边以源点排序保存)
-  \item 利用 PSW (parallel sliding window) 每次访问一个 shard 中所有边与其他 shards 中的出边
-  \item `input --(create shards)--> shards --(run algorithm)--> output`
-  \item 尽管需要进行预处理 (创建 shards, 排序等), 但对于需要长期运行的系统而言, 这仅仅需要进行非常少的次数 (one time cost)
+  存储着所有入边 (即一个 shard 对应一个子图, 边以源点排序保存).
+  \item 利用 PSW (parallel sliding window) 每次访问一个 shard 中所有边与其他 shards 中的出边.
+  \item `input --(create shards)--> shards --(run algorithm)--> output`.
+  \item 尽管需要进行预处理 (创建 shards, 排序等), 但对于需要长期运行的系统而言, 这仅仅需要进行非常少的次数 (one time cost).
   \item 通过 CSR + PSW 结合, 使得 Gather 阶段顺序访问节点的入边 (遍历所属 interval 的整个 shard)
-  Scatter 阶段顺序访问节点的出边 (由于 shard 内部按源点顺序排列, 所以只需遍历其他 interval 的部分 shard)
+  Scatter 阶段顺序访问节点的出边 (由于 shard 内部按源点顺序排列, 所以只需遍历其他 interval 的部分 shard).
 \end{compactitem}
 \subsubsection{Shortcoming}
 \begin{compactitem}
-  \item 构建 shard 是需要对边按源顶点排序，这样耗费了大量的预处理时间，PWS 对计算密集型的算法更有利
-  \item 另外在构建子图时出现大量的随机访存现象，通过顺序地更新子图内有共享边顶点来避免数据争用问题
-  \item GraphChi 计算过程和磁盘 I/O 访问之间串行执行, 可以通过重叠这两部分进一步提升性能
+  \item 构建 shard 是需要对边按源顶点排序，这样耗费了大量的预处理时间，PWS 对计算密集型的算法更有利.
+  \item 另外在构建子图时出现大量的随机访存现象，通过顺序地更新子图内有共享边顶点来避免数据争用问题.
+  \item GraphChi 计算过程和磁盘 I/O 访问之间串行执行, 可以通过重叠这两部分进一步提升性能.
 \end{compactitem}
 
 \subsection{X-Stream}
 X-Stream~\cite{DBLP:conf/sosp/RoyMZ13}具有以下特点:
 \begin{compactitem}
-  \item 以边为中心的 GAS 模型核外单机图计算系统
-  \item 将边划分为多个流式分区 (分区内无需排序), 顺序化地访问每个分区中的所有边
-  \item 随机访问快速存储介质中的数据 (如顶点数据), 顺序访问慢速存储介质中的数据 (如边数据)
-  \item `input --(run algorithm)--> output`
-  \item 没有预处理开销
+  \item 以边为中心的 GAS 模型核外单机图计算系统.
+  \item 将边划分为多个流式分区 (分区内无需排序), 顺序化地访问每个分区中的所有边.
+  \item 随机访问快速存储介质中的数据 (如顶点数据), 顺序访问慢速存储介质中的数据 (如边数据).
+  \item `input --(run algorithm)--> output`.
+  \item 没有预处理开销.
 \end{compactitem}
 \subsubsection{Shortcoming}
 \begin{compactitem}
-  \item X-Stream在计算过程中，每轮迭代产生的更新集非常庞大，接近于边的数量级
-  \item 需要对更新集中的边进行 shuffle 操作
-  \item 缺乏选择调度机制，产生了大量的无用计算
+  \item X-Stream在计算过程中，每轮迭代产生的更新集非常庞大，接近于边的数量级.
+  \item 需要对更新集中的边进行 shuffle 操作.
+  \item 缺乏选择调度机制，产生了大量的无用计算.
 \end{compactitem}
 
 \subsection{TurboGraph}
@@ -435,22 +435,22 @@ GridGraph~\cite{DBLP:conf/usenix/ZhuHC15} 是以边为中心的核外单机图�
 即合并 updates 操作
 \subsubsection{Solution}
 \begin{compactitem}
-  \item 在进行流式分区时, 保证 scatter 阶段的源顶点与 gather 阶段的目的顶点的局部性 (使其位于同一个 streaming partion)
+  \item 在进行流式分区时, 保证 scatter 阶段的源顶点与 gather 阶段的目的顶点的局部性 (使其位于同一个 streaming partion).
   \item 利用 Grid Representation 可以达到这一目的:
-  两级结构的分区 (2-level hierarchical partitioning) + 双滑动窗口 (Dual sliding windows)
+  两级结构的分区 (2-level hierarchical partitioning) + 双滑动窗口 (Dual sliding windows).
 \end{compactitem}
 \subsubsection{Grid Representation}
 \begin{compactitem}
-  \item 将顶点划分为 P 个相等的 chunks
-  \item 将边划分为 P x P 个 blocks: 边源顶点所在的chunk决定其在网格中的行，边目的顶点所在的chunk决定其在网格中的列
+  \item 将顶点划分为 P 个相等的 chunks.
+  \item 将边划分为 P x P 个 blocks: 边源顶点所在的chunk决定其在网格中的行，边目的顶点所在的chunk决定其在网格中的列.
 \end{compactitem}
 第 n 行中的边的源顶点应为 chunk-n 中的顶点,
 第 n 列中的边的目的顶点应为 chunk-n 中的顶点: 第 (m, n) 个 block 中的边的源顶点应为 chunk-m 中的顶点,
 目的顶点应为 chunk-n 中的顶点
 \subsubsection{Dual Sliding Windows}
 \begin{compactitem}
-  \item 以列优先的顺序逐块遍历 edge blocks (自上至下, 自左至右)
-  \item 以列优先的顺序遍历时, 可以减少写带宽 (gather 阶段的 updates)
+  \item 以列优先的顺序逐块遍历 edge blocks (自上至下, 自左至右).
+  \item 以列优先的顺序遍历时, 可以减少写带宽 (gather 阶段的 updates).
 \end{compactitem}
 \subsubsection{Selective Scheduling}
 跳过不具有活跃边的 blocks, 减少不必要的 I/O
@@ -458,7 +458,7 @@ GridGraph~\cite{DBLP:conf/usenix/ZhuHC15} 是以边为中心的核外单机图�
 将每个 Block 进行进一步的 Grid 划分
 \subsubsection{GridGraph Shortcoming}
 \begin{compactitem}
-  \item 折线式的边 block 遍历策略不能达到最大化的Cache/Memory命中率
+  \item 折线式的边 block 遍历策略不能达到最大化的Cache/Memory命中率.
 \end{compactitem}
 
 \subsection{PathGraph}
@@ -475,11 +475,11 @@ BSP 模型是一种基于消息通信的并行计算模型,
 并行任务按照超步组织, 接收来自上一个超步的消息, 执行本地计算并发送消息给下一个超步.
 每个超步包含了三个过程:
 \begin{compactitem}
-  \item 本地计算: 每个工作节点读取其本地数据异步地执行计算
+  \item 本地计算: 每个工作节点读取其本地数据异步地执行计算.
   \item 消息通信: 
-  每个参与计算的工作节点将消息发给与之相连的其它工作节点以相互交换所需的数据
+  每个参与计算的工作节点将消息发给与之相连的其它工作节点以相互交换所需的数据.
   \item 路障同步: 用于数据的全局同步，即块间同步，
-  每个工作节点在更新完自身的消息缓存并确一个超步
+  每个工作节点在更新完自身的消息缓存并确一个超步.
 \end{compactitem}
 由于超步中每个节点上的本地计算的执行时间不等, 进度不统一, 
 全局路障同步将会导致大量节点进入等待状态, 形成快等慢的局面,
@@ -524,10 +524,10 @@ Polymer~\cite{DBLP:conf/ppopp/ZhangCC15}.
 \subsection{Gemini}
 Gemini~\cite{DBLP:conf/osdi/ZhuCZM16} major optimizations:
 \begin{compactitem}
-  \item efficiency: adaptive push-/pull-style computation
-  \item efficiency: hierarchical chunk-based	partitioning
-  \item scalability: locality-aware	chunking
-  \item scalability: chunk-based work-stealing
+  \item efficiency: adaptive push-/pull-style computation.
+  \item efficiency: hierarchical chunk-based	partitioning.
+  \item scalability: locality-aware	chunking.
+  \item scalability: chunk-based work-stealing.
 \end{compactitem}
 
 Gemini organizes outgoing edges in the Compressed Sparse Row (CSR)
@@ -540,9 +540,9 @@ mirrors	pull updates from	neighbors, then	message	remote masters.
 
 Gemini considers both	vertex and edge:
 \begin{compactitem}
-  \item Edge:	the	amount of	work to	be processed
-  \item Vertex:	the	processing speed of	work (locality)
-  \item Hybrid metric: $\alpha \cdot \vert V_i \vert + \vert E_i \vert$
+  \item Edge:	the	amount of	work to	be processed.
+  \item Vertex:	the	processing speed of	work (locality).
+  \item Hybrid metric: $\alpha \cdot \vert V_i \vert + \vert E_i \vert$.
 \end{compactitem}
 
 Divide vertex	set into contiguous chunks.
@@ -558,9 +558,9 @@ overlap computation and inter-node communication tasks.
 FPGA in Data Center~\cite{DBLP:conf/isca/PutnamCCCCDEFGGHHHHKLLPPSTXB14}.
 
 \begin{compactitem}
-  \item cpu 通用
-  \item gpu 高吞吐量
-  \item fpga 低延迟
+  \item cpu 通用.
+  \item gpu 高吞吐量.
+  \item fpga 低延迟.
 \end{compactitem}
 
 FPGA 比 CPU 和 GPU 能效高, 体系结构上的根本优势是无指令, 无需共享内存.
@@ -587,13 +587,19 @@ are needed to increase the reuse rate of vertices on the BRAM.
 
 Shortcoming:
 \begin{compactitem}
-  \item limited resources (BRAM, PLE)
-  \item limited frequency
+  \item limited resources (BRAM, PLE).
+  \item limited frequency.
 \end{compactitem}
 
 \subsection{CyGraph}
 CyGraph~\cite{DBLP:conf/ipps/AttiaJTJZ14}
-targets to BFS algorithm.
+targets to BFS algorithm:
+\begin{compactitem}
+  \item use special CSR data layout.
+  \item design optimized BFS algorithm targeting special CSR layout,
+  cuts down the number of external memory requests by least 50\%.
+\end{compactitem}
+
 
 \subsection{FPGP}
 In FPGP~\cite{DBLP:conf/fpga/DaiCWY16},
@@ -606,9 +612,9 @@ ForeGraph~\cite{DBLP:conf/fpga/DaiHCXWY17}
 adopts \textbf{Grid} (with sub-blocks)
 data layout into distributed FPGA boards:
 \begin{compactitem}
-  \item use BRAM as vertex buffer (source/destination)
-  \item hash-based vertex partitioning
-  \item vertex index compression: reduce data szie
+  \item use BRAM as vertex buffer (source/destination).
+  \item hash-based vertex partitioning.
+  \item vertex index compression: reduce data szie.
   \item shuffle edges to fully utilize all PEs, reduce IDLE PEs.
   Avoid the case that few PEs are overburdened,
   while others are idle waiting edges.
@@ -659,8 +665,8 @@ Graphicionado~\cite{DBLP:conf/micro/HamWSSM16}
 \begin{compactitem}
   \item 访存粒度过大, 导致片外访存带宽被浪费.
   通用处理器从内存载入或存储数据的粒度是缓存行,
-  一个缓存行的大小一般为 64 字节, 而图算法访问数据的粒度一般为 4 字节
-  \item 低效的片上缓存使用. 通用处理器不能有效地将局部性高的数据存储于片上缓存中
+  一个缓存行的大小一般为 64 字节, 而图算法访问数据的粒度一般为 4 字节.
+  \item 低效的片上缓存使用. 通用处理器不能有效地将局部性高的数据存储于片上缓存中.
   \item 不匹配的执行粒度. 通用处理器使用指令来完成计算和访存操作,
   对很多图算法, 绝大部分指令主要用于供给数据和移动数据, 其能效差.
 \end{compactitem}
@@ -683,14 +689,14 @@ SRAM 做到 GB 容量几乎是不可能完成的任务.
 \subsection{Basis of DRAM}
 \subsubsection{Terminology}
 \begin{compactitem}
-  \item RAS: Row Address Strobe (ACT Activate DRAM page/row Command)
-  \item CAS: Column Address Strobe (READ Command)
+  \item RAS: Row Address Strobe (ACT Activate DRAM page/row Command).
+  \item CAS: Column Address Strobe (READ Command).
   \item DDR: Double-Data Rate transfers data
-  on both rising and falling edge of the clock
-  \item Channel: 一组数据信号线、对应几个槽位、对应几根内存条称为一个 channel
-  \item Bank: read out all words in parallel, 一个 bank 包含 N 个 DRAM Subarray (N*row*col*1bit)
-  \item DIMM: Dual Inline Memory Module 双通道内存
-  \item channel＞DIMM＞rank＞chip＞bank＞row/column
+  on both rising and falling edge of the clock.
+  \item Channel: 一组数据信号线、对应几个槽位、对应几根内存条称为一个 channel.
+  \item Bank: read out all words in parallel, 一个 bank 包含 N 个 DRAM Subarray (N*row*col*1bit).
+  \item DIMM: Dual Inline Memory Module 双通道内存.
+  \item channel＞DIMM＞rank＞chip＞bank＞row/column.
 \end{compactitem}
 \subsubsection{Address Mapping Scheme}
 如表~\ref{tab:dram_address_mapping}所示,
@@ -727,11 +733,11 @@ Accessing different rows from one bank is slowest.
 \subsubsection{Delay Time}
 一条访存指令发到内存控制器, 它的访存延时是存在不同的可能性:
 \begin{compactitem}
-  \item row buffer hit: 从 row buffer 到把数据放在数据总线上的时延，大约 20 ns
-  \item empty row buffer: 从电容到 sense amplifier 再到 row buffer 的时序 + 从 row buffer 到数据总线时间，大约40ns
-  \item row buffer conflict: 写回时延 + empty row buffer delay, 大约60ns
-  \item CL: CAS Latency, 从 CAS 与读取命令发出到第一笔数据输出的这段时间 (READ -> data)
-  \item tRCD: RAS 到 CAS 时延 (Active -> READ)
+  \item row buffer hit: 从 row buffer 到把数据放在数据总线上的时延，大约 20 ns.
+  \item empty row buffer: 从电容到 sense amplifier 再到 row buffer 的时序 + 从 row buffer 到数据总线时间，大约40ns.
+  \item row buffer conflict: 写回时延 + empty row buffer delay, 大约60ns.
+  \item CL: CAS Latency, 从 CAS 与读取命令发出到第一笔数据输出的这段时间 (READ -> data).
+  \item tRCD: RAS 到 CAS 时延 (Active -> READ).
   \item 要切换另一行，要发 precharge 命令 (close page/row), 把数据写到 cell 里去.
   关闭一个行需要时间, 这个时间称为 tRP, 发送 PRE/PREA 命令后 tRP 时间才可以发 ACT 命令.
 \end{compactitem}
@@ -766,8 +772,8 @@ Accessing different rows from one bank is slowest.
 \subsection{Simulator}
 \subsubsection{DRAMSim2}
 \begin{compactitem}
-  \item AddressMapping.cpp: 物理地址到内存 (rank/bank/row/col/offset) 的映射关系
-  \item TraceBasedSim.cpp: trace file (.trc) 相关代码
+  \item AddressMapping.cpp: 物理地址到内存 (rank/bank/row/col/offset) 的映射关系.
+  \item TraceBasedSim.cpp: trace file (.trc) 相关代码.
 \end{compactitem}
 \clearpage
 
@@ -779,23 +785,23 @@ load imbalance and global memory access overhead.
 
 \subsection{Basic Infrastructure}
 \begin{compactitem}
-  \item Enhanced/Redundant CSR
-  \item vertex-centric
-  \item GAS (sync)
-  \item push (locks) when few vertices discovered (early iterations),
+  \item Enhanced/Redundant CSR.
+  \item vertex-centric.
+  \item GAS (sync).
+  \item push (locks) when few vertices discovered (early iterations).
   \item pull (no locks) when many vertices discovered (late iterations).
-  \item no NUMA
-  \item Verilog or Sdaccel
+  \item no NUMA.
+  \item Verilog or Sdaccel.
 \end{compactitem}
 
 \subsection{Grpah Kernels or Grpah Benckmarks}
 \begin{compactitem}
-  \item SSSP
-  \item CC
-  \item best-first search
-  \item uniform-cost search
-  \item greedy-search
-  \item A*
+  \item SSSP.
+  \item CC.
+  \item best-first search.
+  \item uniform-cost search.
+  \item greedy-search.
+  \item A*.
 \end{compactitem}
 
 \subsection{Key Optimization}
@@ -804,21 +810,21 @@ hierarchical networks, distributed,
 shared and local caches, local and non-local memory,
 and various cache-coherence effects.
 \begin{compactitem}
-  \item improve poor locality
-  \item use of a bitmap to mark the vertices during the visit
-  \item FastForward queue (PPoPP'08)
+  \item improve poor locality.
+  \item use of a bitmap to mark the vertices during the visit.
+  \item FastForward queue (PPoPP'08).
   \item use of batching when inserting and removing
-  from the inter-socket communication channel to amortize the locking overhead
-  \item software prefetching
-  \item cut off NUMA communication
-  \item parallelism: dataflow (pipelined Multiple Instructions Single Data (MISD) model)
-  \item MLP: HBM
-  \item coalescing multiple into single one
-  \item reshape cache hierachy
-  \item locality-aware vertices buffer
-  \item enhanced CSR/CSC
-  \item work stealing
-  \item overlap communication and computation with multiple pipelines/boards
+  from the inter-socket communication channel to amortize the locking overhead.
+  \item software prefetching.
+  \item cut off NUMA communication.
+  \item parallelism: dataflow (pipelined Multiple Instructions Single Data (MISD) model).
+  \item MLP: HBM.
+  \item coalescing multiple into single one.
+  \item reshape cache hierachy.
+  \item locality-aware vertices buffer.
+  \item enhanced CSR/CSC.
+  \item work stealing.
+  \item overlap communication and computation with multiple pipelines/boards.
 \end{compactitem}
 
 \subparagraph{ILP}
@@ -841,20 +847,20 @@ to implement on graph accelerators for the sophisticated hardware design.
 
 \section{Graph Survey Template}
 \begin{compactitem}
-  \item data presentation/layout
-  \item data ordering: index-aware/degree-aware/conflict-aware
-  \item data partition: source-oriented/destination-oriented
-  \item data manipulation
-  \item open source
-  \item programming model
-  \item partioning
-  \item static and dynamic graphs
-  \item batch and streaming
-  \item algorithms
-  \item community activity
-  \item users
-  \item books 
-  \item distinction points
+  \item data presentation/layout.
+  \item data ordering: index-aware/degree-aware/conflict-aware.
+  \item data partition: source-oriented/destination-oriented.
+  \item data manipulation.
+  \item open source.
+  \item programming model.
+  \item partioning.
+  \item static and dynamic graphs.
+  \item batch and streaming.
+  \item algorithms.
+  \item community activity.
+  \item users.
+  \item books.
+  \item distinction points.
 \end{compactitem}
 \clearpage
 
