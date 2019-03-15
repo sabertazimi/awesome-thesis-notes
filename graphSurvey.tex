@@ -290,6 +290,8 @@ Good when many vertices are active, Locks can be avoided.
 \clearpage
 
 \section{Graph Processing System}
+Previous surveys included many famous systems~\cite{DBLP:journals/csur/McCuneWM15}.
+
 图计算框架核心问题:
 \begin{compactitem}
   \item 任务划分与映射机制: TLP/DLP + mapping (programming/compiler/runtime).
@@ -532,6 +534,23 @@ Gemini~\cite{DBLP:conf/osdi/ZhuCZM16} major optimizations:
 
 Gemini organizes outgoing edges in the Compressed Sparse Row (CSR)
 and incoming ones in the Compressed Sparse Column (CSC) format.
+Gemini find that the basic CSR/CSC format is insufficient,
+the index array idx can become a scaling bottleneck.
+It use \textit{Bitmap Assisted Compressed Sparse Row}
+
+Bitmap Assisted Compressed Sparse Row:
+for sparse mode edges, we add an existence bitmap ext,
+which marks whether each vertex has outgoing edges in this partition.
+For example, only vertex 0, 2, and 4 are present,
+indicated by the bitmap 101010.
+
+Doubly Compressed Sparse Column: for dense mode edges,
+use a doubly compression scheme
+to store only vertices with incoming edges (vtx)
+and their corresponding edge offsets (off, where
+(off[i+1]-off[i]) indicates the number of local
+incoming edges vertex vtx[i] has).
+For example, only vertex 1, 2, 3, and 5 has local incoming edges.
 
 Sparse mode for push operations, dense mode for pull operations (locks-free).
 When it comes to distributed push/pull mode,
@@ -600,6 +619,28 @@ targets to BFS algorithm:
   cuts down the number of external memory requests by least 50\%.
 \end{compactitem}
 
+For each CSR row offset element, $R[i]$,
+use the least significant bit of the row index as a visited flag
+(0 as not vistied)
+The remaining bits of $R[i]$ are used as follows:
+\begin{compactitem}
+  \item if node i is visited,
+  the LSB of $R[i]$ will equal 1
+  and the remaining bits will be used for node level.
+  \item if node i is not visited,
+  the MSB bits from 63 to 32 will be used as row index
+  and the bits from 31 to 1 as neighbors count.
+\end{compactitem}
+
+CyGraph kernel as a pipeline of four stages.
+Pipeline stages are separated by a FIFO queues.
+In order to find out when the kernel finishes processing,
+every process counts all items it reads and writes.
+The kernel finishes when all of its processes
+are terminated successfully and all the FIFO queues are empty.
+
+Graphs get more sparse, CyGraph obtains higher speedups
+and comes quite close to its peak performance.
 
 \subsection{FPGP}
 In FPGP~\cite{DBLP:conf/fpga/DaiCWY16},
@@ -802,6 +843,36 @@ load imbalance and global memory access overhead.
   \item uniform-cost search.
   \item greedy-search.
   \item A*.
+\end{compactitem}
+
+The level-synchronous BFS algorithm~\cite{DBLP:conf/ipps/AttiaJTJZ14}
+uses three sets of nodes as follows:
+\begin{compactitem}
+  \item Set of current nodes ($Q_c$).
+  \item Set of next nodes ($Q_n$).
+  \item Visited nodes ($V$).
+\end{compactitem}
+
+The algorithm starts with the root node in the current set.
+Iteratively, the algorithm visits all the nodes in $Q_c$,
+sets their level as the current level
+and collects the next-level set $Q_n$.
+In the next iteration, $Q_c$ is populated with values from $Q_n$,
+and $Q_n$ is cleared for the new level.
+
+\subsection{Enhanced CSR Format}
+$C_i$ represents destination of i-nth outgoing edge.
+For bits of $R_i$:
+\begin{compactitem}
+  \item $R_i[0]$ represent visit status.
+  \item $R_i[1]$ represnet existence of outgoing edge of $Node_i$.
+  \item $R_i[63...2]$:
+  when $R_i[0] == 0$ (not visited),
+  $R_i[63...32]$ for neighbors' start offset
+  and $R_i[31...2]$ for neighbors' end offset
+  ($for (cur= R_i[63...32], end = R_i[31...2]; cur < end; cur += 1) \{ C_{cur}... \}$);
+  when $R_i[0] == 1$ (visited),
+  $R_i[63...1]$ for visit level of $Node_i$.
 \end{compactitem}
 
 \subsection{Key Optimization}
