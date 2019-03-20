@@ -1,5 +1,24 @@
 # Latex Basic Notes
 
+<!-- TOC -->
+
+- [Latex Basic Notes](#latex-basic-notes)
+  - [Workflow](#workflow)
+    - [Installation](#installation)
+    - [Build Script](#build-script)
+  - [Basis](#basis)
+    - [Layout](#layout)
+      - [Page Size](#page-size)
+      - [Font Size](#font-size)
+  - [Math](#math)
+    - [Symbol](#symbol)
+  - [template](#template)
+  - [Tools](#tools)
+    - [PDF to Tex](#pdf-to-tex)
+    - [tlmgr](#tlmgr)
+
+<!-- /TOC -->
+
 ## Workflow
 
 ### Installation
@@ -41,14 +60,14 @@ sudo tlmgr update --self --all
 filename=main
 
 pdf:
-	pdflatex -synctex=1 -shell-escape -interaction=nonstopmode ${filename}.tex
-	bibtex ${filename}
-	pdflatex -synctex=1 -shell-escape -interaction=nonstopmode ${filename}.tex
+  pdflatex -synctex=1 -shell-escape -interaction=nonstopmode ${filename}.tex
+  bibtex ${filename}
+  pdflatex -synctex=1 -shell-escape -interaction=nonstopmode ${filename}.tex
   pdflatex -synctex=1 -shell-escape -interaction=nonstopmode ${filename}.tex
 
 clean:
-	rm -f ${filename}.{ps,pdf,log,aux,out,dvi,bbl,blg,synctex.gz,toc,bcf,run.xml,tex.bbl,tex.blg}
-	rm -f ${filename}-blx.bib
+  rm -f ${filename}.{ps,pdf,log,aux,out,dvi,bbl,blg,synctex.gz,toc,bcf,run.xml,tex.bbl,tex.blg}
+  rm -f ${filename}-blx.bib
 ```
 
 ## Basis
@@ -56,6 +75,7 @@ clean:
 - [Simple Introduction](https://liam0205.me/2014/09/08/latex-introduction)
 - [Writing Scientific Documents Using LATEX](ftp://ftp.dante.de/tex-archive/info/intro-scientific/scidoc.pdf)
 - [Haiyang Liu's Tutorial](https://github.com/wuzhouhui/misc/blob/master/LaTeX%E5%85%A5%E9%97%A8%20%E5%88%98%E6%B5%B7%E6%B4%8B.pdf)
+- [Paper Tips and Tricks](https://github.com/Wookai/paper-tips-and-tricks)
 
 ### Layout
 
@@ -89,12 +109,12 @@ clean:
 - [The Comprehensive LATEX Symbol List](http://tug.ctan.org/info/symbols/comprehensive/symbols-a4.pdf)
 
 ```latex
-$ \gamma \delta \sigma \phi \psi \rho \mu \pi $
-$ \sim \in $
-$ \geq \leq $
-$ \infty $
-$ \rightarrow $
-$ \surd \sqrt{2} \frac{x}{y} $
+$\gamma \delta \sigma \phi \psi \rho \mu \pi$
+$\sim \in$
+$\geq \leq$
+$\infty$
+$\rightarrow$
+$\surd \sqrt{2} \frac{x}{y}$
 ```
 
 ## template
