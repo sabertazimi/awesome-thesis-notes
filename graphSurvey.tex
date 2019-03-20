@@ -460,6 +460,9 @@ which reduce the synchronization needed for high-diameter graphs.
 \subsection{GRACE}
 GRACE~\cite{DBLP:conf/cidr/WangXDG13}
 explores dynamic scheduling within a single superstep.
+GRACE exposes a programming interface (from within a given superstep)
+allows for prioritized execution of vertices and
+selective receiving of messages outside of the previous superstep.
 
 \subsection{FlashGraph}
 FlashGraph~\cite{DBLP:conf/fast/ZhengMBVPS15}
@@ -557,9 +560,21 @@ GAS 模型具有更好的灵活性, 适应大多数图算法,
 在迭代次数上严重滞后于其它任务, 则有可能使正确性无法得到完全保证.
 
 \subsection{PowerSwitch}
+For some algorithms, one execution mode may outperform another
+only for certain stages of processing.
+Process begins with few active vertices,
+where asynchronous execution is advantageous,
+then propagates to a high number of active vertices performing lightweight computations,
+which is ideal for synchronous execution,
+before finally converging among few active vertices.
+
+Motivated by the necessity for execution mode dynamism,
 PowerSwitch~\cite{DBLP:conf/ppopp/XieCGZC15}
-removes the need to choose between synchronous and asynchronous execution
-and instead \textbf{adaptively switches} between the two modes to improve performance.
+can adaptively switch between synchronous and asynchronous execution modes.
+Developed on top of the PowerGraph platform,
+PowerSwitch can quickly and efficiently switch execution modes.
+PowerSwitch incorporates throughput heuristics with online sampling
+to predict which execution mode will perform better currently.
 
 \subsection{Polymer}
 Polymer~\cite{DBLP:conf/ppopp/ZhangCC15}.
