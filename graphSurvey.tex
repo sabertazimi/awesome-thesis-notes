@@ -248,6 +248,9 @@ CSR 行压缩使得顶点的出边被连续存储, CSC 列压缩使得顶点的�
 当修改边的值时, 存在数据同步的问题.
 
 \subsection{Processing Model}
+\subsubsection{Vertex Centric Paradigm}
+Many famous systems adopt
+vertex-centric processing paradigm~\cite{DBLP:journals/csur/McCuneWM15}.
 Vertex-centric paradigm has expressive potentials
 to easily represent various kinds of graph algorithms,
 and the high parallelism in the grain of vertex.
@@ -255,20 +258,50 @@ However, in the vertex-centric paradigm,
 there can be random accesses to edges,
 resulting in potentially heavy memory access overhead.
 
+Vertex programs only depend on data local to a vertex
+and reduce computational complexity by increasing communication between program kernels.
+As a result, TLAV frameworks are highly scalable and inherently parallel,
+with manageable intermachine communication~\cite{DBLP:journals/csur/McCuneWM15}.
+
+\subsubsection{Edge Centric Paradigm}
 Edge-centric paradigm is lack of flexible scheduling potential
 in contrast to the vertex-centric one.
 Almost all of edges have to be processed multiple times
 to complete the whole process.
 This paradigm may also lead to
-a large number of random accesses to vertices.
+a large number of random accesses to vertices~\cite{DBLP:conf/usenix/MalicevicLZ17}.
 
-\subsection{Message Passing}
+\subsection{Schedule Timing}
+\subsubsection{Synchronous}
+Synchronous has these characteristics~\cite{DBLP:journals/csur/McCuneWM15}:
+\begin{compactitem}
+  \item almost always deterministic and simple.
+  \item distributed synchronous systems are along with message/batch passing communication.
+  \item straggler problem: synchronization imposes consistent overhead (barriers).
+  Each superstep takes as long as the \textbf{slowest} vertex.
+  \item synchronous algorithms may not converge in some instances.
+\end{compactitem}
+\subsubsection{Synchronous}
+Asynchronous has these characteristics~\cite{DBLP:journals/csur/McCuneWM15}:
+\begin{compactitem}
+  \item no explicit synchronization points, no straggler problem
+  \item providing more execution flexibility
+  \item many asynchronous models outperform corresponding synchronous models
+  (especially for imbalanced workload),
+  but more complex (scheduling logic and maintaining data consistency).
+  \item cannot take advantage of batch messaging optimizations.
+  Synchronous execution generally accommodates I/O-bound algorithms,
+  while asynchronous execution well-serves CPU-bound algorithms.
+\end{compactitem}
+
+\subsection{Information Flow}
 \subsubsection{Push}
 Push information to neighbors, write to state of others:
 Good when few vertices are active, but Needs locks.
 \subsubsection{Pull}
 Pull information from neighbors, write to own state:
 Good when many vertices are active, Locks can be avoided.
+Communication becomes redundant when neighboring vertices aren't active.
 \begin{figure}
   \begin{small}
     \begin{center}
@@ -290,8 +323,6 @@ Good when many vertices are active, Locks can be avoided.
 \clearpage
 
 \section{Graph Processing System}
-Previous surveys included many famous systems~\cite{DBLP:journals/csur/McCuneWM15}.
-
 图计算框架核心问题:
 \begin{compactitem}
   \item 任务划分与映射机制: TLP/DLP + mapping (programming/compiler/runtime).
@@ -343,12 +374,14 @@ Previous surveys included many famous systems~\cite{DBLP:journals/csur/McCuneWM1
   TurboGraph~\cite{DBLP:conf/kdd/HanLPL0KY13},
   Ligra~\cite{DBLP:conf/ppopp/ShunB13},
   Galois~\cite{DBLP:conf/sosp/NguyenLP13},
+  GRACE~\cite{DBLP:conf/cidr/WangXDG13}
   FlashGraph~\cite{DBLP:conf/fast/ZhengMBVPS15},
   GridGraph~\cite{DBLP:conf/usenix/ZhuHC15},
   PathGraph~\cite{DBLP:journals/tpds/YuanXLJ16}.
   \item 分布式图计算系统: Pregel~\cite{DBLP:conf/sigmod/MalewiczABDHLC10},
   GraphLab~\cite{DBLP:journals/pvldb/LowGKBGH12},
   PowerGraph~\cite{DBLP:conf/osdi/GonzalezLGBG12},
+  PowerSwitch~\cite{DBLP:conf/ppopp/XieCGZC15}
   Polymer~\cite{DBLP:conf/ppopp/ZhangCC15},
   Gemini~\cite{DBLP:conf/osdi/ZhuCZM16}.
 \end{compactitem}
@@ -365,7 +398,6 @@ Previous surveys included many famous systems~\cite{DBLP:journals/csur/McCuneWM1
   \item 以顶点为中心 GAS 计算模式适用于度高的顶点 (特别对于 Gather, 可以大量减少访存),
   而以边为中心 GAS 计算模式适用于度低的顶点.
 \end{compactitem}
-
 
 \subsection{GraphChi}
 GraphChi~\cite{DBLP:conf/osdi/KyrolaBG12}具有以下特点:
@@ -424,6 +456,10 @@ are designed to handle irregular fine-grained task parallelism.
 Algorithms implemented in Galois
 are free to use autonomous scheduling (no synchronization barriers),
 which reduce the synchronization needed for high-diameter graphs.
+
+\subsection{GRACE}
+GRACE~\cite{DBLP:conf/cidr/WangXDG13}
+explores dynamic scheduling within a single superstep.
 
 \subsection{FlashGraph}
 FlashGraph~\cite{DBLP:conf/fast/ZhengMBVPS15}
@@ -519,6 +555,11 @@ GAS 模型具有更好的灵活性, 适应大多数图算法,
 这提升了计算资源的利用率和整体任务的执行效率.
 但是仍有一定的缺陷: 假设某些任务由于硬件故障或者机器负载高,
 在迭代次数上严重滞后于其它任务, 则有可能使正确性无法得到完全保证.
+
+\subsection{PowerSwitch}
+PowerSwitch~\cite{DBLP:conf/ppopp/XieCGZC15}
+removes the need to choose between synchronous and asynchronous execution
+and instead \textbf{adaptively switches} between the two modes to improve performance.
 
 \subsection{Polymer}
 Polymer~\cite{DBLP:conf/ppopp/ZhangCC15}.
@@ -861,19 +902,30 @@ In the next iteration, $Q_c$ is populated with values from $Q_n$,
 and $Q_n$ is cleared for the new level.
 
 \subsection{Enhanced CSR Format}
-$C_i$ represents destination of i-nth outgoing edge.
-For bits of $R_i$:
+$C[i]$ represents destination of i-nth outgoing edge.
+For bits of $R[i]$ (described in algorithm~\ref{alg:enhanced_csr}):
 \begin{compactitem}
-  \item $R_i[0]$ represent visit status.
-  \item $R_i[1]$ represnet existence of outgoing edge of $Node_i$.
-  \item $R_i[63...2]$:
-  when $R_i[0] == 0$ (not visited),
-  $R_i[63...32]$ for neighbors' start offset
-  and $R_i[31...2]$ for neighbors' end offset
-  ($for (cur= R_i[63...32], end = R_i[31...2]; cur < end; cur += 1) \{ C_{cur}... \}$);
-  when $R_i[0] == 1$ (visited),
-  $R_i[63...1]$ for visit level of $Node_i$.
+  \item $R[i]_0$ represent visit status.
+  \item $R[i]_1$ represnet existence of outgoing edge of $Node_i$.
+  \item $R[i]_{63...2}$:
+  when $R[i]_0 == 0$ (not visited),
+  $R[i]_{63...32}$ for neighbors' start offset
+  and $R[i]_{31...2}$ for neighbors' end offset
+  when $R[i]_0 == 1$ (visited),
+  $R[i]_{63...1}$ for visit level of $Node_i$.
 \end{compactitem}
+\begin{algorithm}
+  \floatname{algorithm}{Algorithm}
+  \algrenewcommand\algorithmicrequire{\textbf{Input: }}
+  \algrenewcommand\algorithmicensure{\textbf{Output: }}
+  \caption{Enhanced CSR Format}
+  \label{alg:enhanced_csr}
+  \begin{algorithmic}[1]
+    \For{$cur = R[i]_{63...32}:R[i]_{31...2}$}
+      \State $C[cur]$ ...
+    \EndFor
+  \end{algorithmic}
+\end{algorithm}
 
 \subsection{Key Optimization}
 Different types of locality:
