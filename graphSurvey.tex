@@ -262,7 +262,6 @@ Vertex programs only depend on data local to a vertex
 and reduce computational complexity by increasing communication between program kernels.
 As a result, TLAV frameworks are highly scalable and inherently parallel,
 with manageable intermachine communication~\cite{DBLP:journals/csur/McCuneWM15}.
-
 \subsubsection{Edge Centric Paradigm}
 Edge-centric paradigm is lack of flexible scheduling potential
 in contrast to the vertex-centric one.
@@ -270,6 +269,12 @@ Almost all of edges have to be processed multiple times
 to complete the whole process.
 This paradigm may also lead to
 a large number of random accesses to vertices~\cite{DBLP:conf/usenix/MalicevicLZ17}.
+\subsubsection{GAS}
+GAS 模型具有更好的灵活性, 适应大多数图算法,
+并发任务间不需要数据同步过程, 每个并发任务在任意时刻都可以对全局参数进行读和更新,
+这提升了计算资源的利用率和整体任务的执行效率.
+但是仍有一定的缺陷: 假设某些任务由于硬件故障或者机器负载高,
+在迭代次数上严重滞后于其它任务, 则有可能使正确性无法得到完全保证.
 
 \subsection{Schedule Timing}
 \subsubsection{Synchronous}
@@ -281,7 +286,7 @@ Synchronous has these characteristics~\cite{DBLP:journals/csur/McCuneWM15}:
   Each superstep takes as long as the \textbf{slowest} vertex.
   \item synchronous algorithms may not converge in some instances.
 \end{compactitem}
-\subsubsection{Synchronous}
+\subsubsection{Asynchronous}
 Asynchronous has these characteristics~\cite{DBLP:journals/csur/McCuneWM15}:
 \begin{compactitem}
   \item no explicit synchronization points, no straggler problem
@@ -294,8 +299,9 @@ Asynchronous has these characteristics~\cite{DBLP:journals/csur/McCuneWM15}:
 
 Synchronous execution generally accommodates I/O-bound algorithms,
 while asynchronous execution well-serves CPU-bound algorithms.
-Such as PageRank, where vertices are “always active” so messaging is high,
-synchronous execution has been shown to significantly outperform asynchronous execution.
+Such as PageRank, where vertices are ``always active'' so messaging is high,
+synchronous execution has been shown to significantly outperform asynchronous execution
+~\cite{DBLP:journals/csur/McCuneWM15}.
 
 \subsection{Communication}
 \subsubsection{Message Passing}
@@ -306,19 +312,20 @@ which guarantees data consistency and uses batch messaging to reduce high networ
 ~\cite{DBLP:journals/csur/McCuneWM15}.
 \subsubsection{Shared Memory}
 Shared memory exposes vertex data as shared variables
-that can be directly read or be modified by other vertex programs
-~\cite{DBLP:journals/csur/McCuneWM15}.
-
+that can be directly read or be modified by other vertex programs.
 One disadvantage of distributed shared-memory frameworks is seen
 when computing on scale-free graphs, which have a certain percentage of high-degree vertices.
 The graph can be difficult to partition resulting in many ghost vertices.
-For distributed shared memory, the graph is cut along vertex C,
-where C1 is arbitrarily chosen as the master and C2 as the mirror.
-C2 compute a partial result based on local neighbors,
-the partial result is sent over the network from the mirror C2 to the master C1,
-the master computes the final result for the iteration.
-Such vertex cuts and three-phase computation can overcome processing challenges
+Vertex cuts and three-phase computation can overcome processing challenges
 like imbalances arising from high-degree vertices in scale-free graphs.
+
+Shared-memory systems are often implemented with asynchronous execution.
+Shared memory with asynchronous execution is an effective platform for dynamic computation,
+because the movement of data is separated from computation.
+Asynchronous sharedmemory systems can potentially outperform
+synchronous message-passing systems,
+though the latter often demonstrate better scalability and generalization
+~\cite{DBLP:journals/csur/McCuneWM15}.
 
 \subsection{Information Flow}
 \subsubsection{Push}
@@ -328,6 +335,13 @@ Good when few vertices are active, but Needs locks.
 Pull information from neighbors, write to own state:
 Good when many vertices are active, Locks can be avoided.
 Communication becomes redundant when neighboring vertices aren't active.
+
+Delta-caching optimization is helpful for such case~\cite{DBLP:conf/osdi/GonzalezLGBG12}.
+An accumulator value is the result of the gather step.
+With delta-caching, a cached copy of the accumulator for each vertex is stored by the worker.
+For a given update with only minimal change ($\delta$),
+then neighboring vertices aren’t activated
+
 \begin{figure}
   \begin{small}
     \begin{center}
@@ -346,6 +360,68 @@ Communication becomes redundant when neighboring vertices aren't active.
     \label{fig:everythinggraph2}
   \end{small}
 \end{figure}
+
+\subsection{Optimization}
+\subsubsection{Communication}
+\begin{compactitem}
+  \item minimize communication overhead.
+  \item mirrors (edge cut/vertex cut/scatter vertex/combiner vertex)
+  of high-degree vertices placed into distributed machines (PowerGraph).
+  Breaking up high-degree vertices reduces network communication
+  and helps to balance computation.
+  \item synchronous batch messaging.
+  \item coalescing multiple into single one.
+  \item use of batching when inserting and removing
+  from the inter-socket communication channel to amortize the locking overhead.
+  \item cut off NUMA communication.
+  \item use of a bitmap to mark the vertices during the visit.
+  \item FastForward queue (PPoPP'08).
+\end{compactitem}
+\subsubsection{Locality}
+\begin{compactitem}
+  \item improve poor locality, such as
+  hierarchical networks, distributed,
+  shared and local caches, local and non-local memory,
+  and various cache-coherence effects.
+  \item locality-aware vertices buffer.
+  \item reshape cache hierachy.
+  \item software prefetching.
+\end{compactitem}
+\subsubsection{Parallelism}
+\begin{compactitem}
+  \item ILP: dataflow (pipelined Multiple Instructions Single Data (MISD) model).
+  \item MLP: HBM.
+  \item overlap communication and computation with multiple pipelines/boards.
+  \item different types of threads: computation/communication/parsing
+\end{compactitem}
+
+\subparagraph{ILP}
+vertex dependencies of graph can stall the pipelines
+and decrease the instruction level parallelism.
+How to reduce the impact arising from data dependencies
+remains an open problem for increasing the number of Instructions per Cycle (IPC).
+
+\subparagraph{MLP}
+Multi-bank, multi-port, optimizied memory access.
+The memory bandwidth utilization here means
+the valid values ratio per transfer.
+Random accesses in graph processing usually cause
+low ratio of valid values and result in much wasted bandwidth.
+Improving the memory bandwidth utilization can reduce the total number of memory accesses.
+
+\subsubsection{Storage}
+\begin{compactitem}
+  \item enhanced CSR/CSC.
+\end{compactitem}
+\subsubsection{Scheduling}
+\begin{compactitem}
+  \item asynchronous schedule timing.
+  \item work stealing.
+\end{compactitem}
+
+\subparagraph{Asynchronous}
+Asynchronous mode requires tremendous efforts
+to implement on graph accelerators for the sophisticated hardware design.
 \clearpage
 
 \section{Graph Processing System}
@@ -407,7 +483,8 @@ Communication becomes redundant when neighboring vertices aren't active.
   \item 分布式图计算系统: Pregel~\cite{DBLP:conf/sigmod/MalewiczABDHLC10},
   GraphLab~\cite{DBLP:journals/pvldb/LowGKBGH12},
   PowerGraph~\cite{DBLP:conf/osdi/GonzalezLGBG12},
-  PowerSwitch~\cite{DBLP:conf/ppopp/XieCGZC15}
+  PowerLyra~\cite{DBLP:conf/eurosys/ChenSCC15},
+  PowerSwitch~\cite{DBLP:conf/ppopp/XieCGZC15},
   Polymer~\cite{DBLP:conf/ppopp/ZhangCC15},
   Gemini~\cite{DBLP:conf/osdi/ZhuCZM16}.
 \end{compactitem}
@@ -469,7 +546,8 @@ TurboGraph~\cite{DBLP:conf/kdd/HanLPL0KY13}设计了一种页结构,
 
 \subsection{Ligra}
 Ligra~\cite{DBLP:conf/ppopp/ShunB13} is built on
-the abstractions of edge maps and vertex maps.
+the abstractions of edge maps and vertex maps
+with scatter-gather processing model.
 When applying these map functions,
 Ligra uses heuristics to determine in
 which direction to apply them (push or pull)
@@ -609,11 +687,18 @@ the master computes the final result for the iteration.
 Such vertex cuts and three-phase computation can overcome processing challenges
 like imbalances arising from high-degree vertices in scale-free graphs.
 
-GAS 模型具有更好的灵活性, 适应大多数图算法,
-并发任务间不需要数据同步过程, 每个并发任务在任意时刻都可以对全局参数进行读和更新,
-这提升了计算资源的利用率和整体任务的执行效率.
-但是仍有一定的缺陷: 假设某些任务由于硬件故障或者机器负载高,
-在迭代次数上严重滞后于其它任务, 则有可能使正确性无法得到完全保证.
+Delta-caching optimization is helpful for such case~\cite{DBLP:conf/osdi/GonzalezLGBG12}.
+An accumulator value is the result of the gather step.
+With delta-caching, a cached copy of the accumulator for each vertex is stored by the worker.
+For a given update with only minimal change ($\delta$),
+then neighboring vertices aren’t activated
+
+\subsection{PowerLyra}
+PowerLyra~\cite{DBLP:conf/eurosys/ChenSCC15}
+is a modification to PowerGraph that hybridizes partitioning
+where vertices with a degree above a user-defined threshold are cut,
+while vertices below the threshold are partitioned using
+an adaptation of the FENNEL streaming algorithm.
 
 \subsection{PowerSwitch}
 For some algorithms, one execution mode may outperform another
@@ -633,7 +718,8 @@ PowerSwitch incorporates throughput heuristics with online sampling
 to predict which execution mode will perform better currently.
 
 \subsection{Polymer}
-Polymer~\cite{DBLP:conf/ppopp/ZhangCC15}.
+Polymer~\cite{DBLP:conf/ppopp/ZhangCC15} is implemented for
+single machines with scatter-gather processing model.
 
 \subsection{Gemini}
 Gemini~\cite{DBLP:conf/osdi/ZhuCZM16} major optimizations:
@@ -997,47 +1083,6 @@ For bits of $R[i]$ (described in algorithm~\ref{alg:enhanced_csr}):
     \EndFor
   \end{algorithmic}
 \end{algorithm}
-
-\subsection{Key Optimization}
-Different types of locality:
-hierarchical networks, distributed,
-shared and local caches, local and non-local memory,
-and various cache-coherence effects.
-\begin{compactitem}
-  \item improve poor locality.
-  \item use of a bitmap to mark the vertices during the visit.
-  \item FastForward queue (PPoPP'08).
-  \item use of batching when inserting and removing
-  from the inter-socket communication channel to amortize the locking overhead.
-  \item software prefetching.
-  \item cut off NUMA communication.
-  \item parallelism: dataflow (pipelined Multiple Instructions Single Data (MISD) model).
-  \item MLP: HBM.
-  \item coalescing multiple into single one.
-  \item reshape cache hierachy.
-  \item locality-aware vertices buffer.
-  \item enhanced CSR/CSC.
-  \item work stealing.
-  \item overlap communication and computation with multiple pipelines/boards.
-\end{compactitem}
-
-\subparagraph{ILP}
-Vertex dependencies of graph can stall the pipelines
-and decrease the instruction level parallelism.
-How to reduce the impact arising from data dependencies
-remains an open problem for increasing the number of Instructions per Cycle (IPC).
-
-\subparagraph{MLP}
-Multi-bank, multi-port, optimizied memory access.
-The memory bandwidth utilization here means
-the valid values ratio per transfer.
-Random accesses in graph processing usually cause
-low ratio of valid values and result in much wasted bandwidth.
-Improving the memory bandwidth utilization can reduce the total number of memory accesses.
-
-\subparagraph{Asynchronous}
-Asynchronous mode requires tremendous efforts
-to implement on graph accelerators for the sophisticated hardware design.
 
 \section{Graph Survey Template}
 \begin{compactitem}
