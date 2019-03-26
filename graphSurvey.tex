@@ -269,6 +269,22 @@ Almost all of edges have to be processed multiple times
 to complete the whole process.
 This paradigm may also lead to
 a large number of random accesses to vertices~\cite{DBLP:conf/usenix/MalicevicLZ17}.
+\subsubsection{Subgraph Centeric Paradigm}
+A subgraph can be partitioned into a size small enough to fit into memory
+(considering computation) while the connections between subgraphs would be likely
+much less than the total number of edges.
+The system would better utilize processing while retaining scalability
+(Giraph++, Blogel)~\cite{DBLP:journals/csur/McCuneWM15}.
+\subsubsection{Path Centeric Paradigm}
+Amore specific type of subgraph, a traversal tree,
+is used for the programming model in PathGraph.
+for the path-centric computational model,
+Path-centric scatter and path-centric gather functions
+are available to the user to define an algorithm that traverses each tree.
+The user also defines a vertex update function,
+which is executed by the path-centric functions during the traversal.
+The path-centric model utilizes locality to improve performance
+through reduced memory usage and efficient caching.
 \subsubsection{GAS}
 GAS 模型具有更好的灵活性, 适应大多数图算法,
 并发任务间不需要数据同步过程, 每个并发任务在任意时刻都可以对全局参数进行读和更新,
@@ -571,6 +587,13 @@ selective receiving of messages outside of the previous superstep.
 \subsection{FlashGraph}
 FlashGraph~\cite{DBLP:conf/fast/ZhengMBVPS15}
 是一个能在固态硬盘阵列上处理具有万亿节点的半外存的单机图计算系统.
+FlashGraph is deployed on top of the set-associative file system (SAFS).
+which includes a scalable lightweight page cache,
+and implements a custom asynchronous user-task I/O interface
+that reduces overhead for asynchronous I/O.
+FlashGraph employs asynchronous message-passing
+and vertex-centric programming with the semiexternal memory (SEM) model
+(where vertices and algorithmic state reside in RAM but edges are stored externally).
 
 \subsection{GridGraph}
 \subsubsection{Motivation}
@@ -610,6 +633,16 @@ GridGraph~\cite{DBLP:conf/usenix/ZhuHC15} 是以边为中心的核外单机图�
 PathGraph~\cite{DBLP:journals/tpds/YuanXLJ16}
 是一个采用路径中心计算模型的单机图计算系统, 通过构建前向边遍历树和后向边遍历树,
 将图算法的每次迭代计算分解为沿前向边遍历树更新数据和沿后向边遍历树收集消息的两步操作.
+PathGraph implements a path-centric compact storage system
+that improves compactness and locality.
+Because most iterative graph algorithms involve path traversal,
+PathGraph stores edge-traversal trees in depth-first search order.
+Both the forward and reverse edge trees are each stored in a chunk storage structure
+that compresses data structure information
+including the adjacency set, vertex IDs, and the indexing of the chunk.
+The efficient computational model and storage structure of PathGraph
+resulted in improved graph loading time, lower memory footprint
+and faster runtime for certain algorithms.
 
 \subsection{Pregel}
 Pregel~\cite{DBLP:conf/sigmod/MalewiczABDHLC10}
