@@ -290,9 +290,35 @@ Asynchronous has these characteristics~\cite{DBLP:journals/csur/McCuneWM15}:
   (especially for imbalanced workload),
   but more complex (scheduling logic and maintaining data consistency).
   \item cannot take advantage of batch messaging optimizations.
-  Synchronous execution generally accommodates I/O-bound algorithms,
-  while asynchronous execution well-serves CPU-bound algorithms.
 \end{compactitem}
+
+Synchronous execution generally accommodates I/O-bound algorithms,
+while asynchronous execution well-serves CPU-bound algorithms.
+Such as PageRank, where vertices are “always active” so messaging is high,
+synchronous execution has been shown to significantly outperform asynchronous execution.
+
+\subsection{Communication}
+\subsubsection{Message Passing}
+Information is sent from one vertex program kernel to another via a message.
+A message contains local vertex data and is addressed to the ID of the recipient vertex.
+Message passing is commonly implemented with synchronized execution,
+which guarantees data consistency and uses batch messaging to reduce high network bandwidth
+~\cite{DBLP:journals/csur/McCuneWM15}.
+\subsubsection{Shared Memory}
+Shared memory exposes vertex data as shared variables
+that can be directly read or be modified by other vertex programs
+~\cite{DBLP:journals/csur/McCuneWM15}.
+
+One disadvantage of distributed shared-memory frameworks is seen
+when computing on scale-free graphs, which have a certain percentage of high-degree vertices.
+The graph can be difficult to partition resulting in many ghost vertices.
+For distributed shared memory, the graph is cut along vertex C,
+where C1 is arbitrarily chosen as the master and C2 as the mirror.
+C2 compute a partial result based on local neighbors,
+the partial result is sent over the network from the mirror C2 to the master C1,
+the master computes the final result for the iteration.
+Such vertex cuts and three-phase computation can overcome processing challenges
+like imbalances arising from high-degree vertices in scale-free graphs.
 
 \subsection{Information Flow}
 \subsubsection{Push}
@@ -509,8 +535,9 @@ PathGraph~\cite{DBLP:journals/tpds/YuanXLJ16}
 
 \subsection{Pregel}
 Pregel~\cite{DBLP:conf/sigmod/MalewiczABDHLC10}
-是一种基于 BSP 模型, 以顶点为中心的分布式图处理系统.
-BSP 模型是一种基于消息通信的并行计算模型,
+是一种基于 \textit{BSP} 模型, 以\textit{顶点为中心}的分布式图处理系统.
+BSP 模型是一种基于\textit{消息通信 (Message Passing) }的并行计算模型,
+
 计算由一系列称为超步 (Superstep) 的通过全局同步分开的计算步骤组成,
 采用块间同步处理, 块内异步并行的计算.
 并行任务按照超步组织, 接收来自上一个超步的消息, 执行本地计算并发送消息给下一个超步.
@@ -522,15 +549,30 @@ BSP 模型是一种基于消息通信的并行计算模型,
   \item 路障同步: 用于数据的全局同步，即块间同步，
   每个工作节点在更新完自身的消息缓存并确一个超步.
 \end{compactitem}
+
+Vertices do not have ID information of all of the other vertices,
+destination vertex IDs are typically obtained by iterating over outgoing edges
+For local machine, the worker process place the message
+directly into the vertex’s incoming message queue.
+For remote machine, the worker process looks up the worker ID of the destination vertex
+and places the message in an outgoing message buffer (\textit{batch messaging})
+(merge multiple messages into a single network sending).
+All messages sent during superstep S are received in superstep S + 1,
+at which point a vertex program can access the incoming message queue
+at the beginning of S + 1’s program execution.
+
 由于超步中每个节点上的本地计算的执行时间不等, 进度不统一, 
 全局路障同步将会导致大量节点进入等待状态, 形成快等慢的局面,
 进而产生``木桶效应'', 造成计算资源的浪费.
-且这种方式的工作节点间的通信量较多, 也会加大时间开销.
+Because vertices do not have ID information of all of the other vertices,
+destination vertex IDs are typically obtained by iterating over outgoing edges
+(visit all possible outgoing edges).
+这种方式的工作节点间的通信量较多, 也会加大时间开销.
 基于 BSP 模型的分布式图计算系统在处理具有幂率分布的图时效率较低.
 
 \subsection{GraphLab}
 GraphLab~\cite{DBLP:journals/pvldb/LowGKBGH12}
-是一种基于 GAS 模型的分布式图处理系统,
+是一种基于 \textit{GAS} 模型的 \textit{Shared Memory} 分布式图处理系统,
 对 BSP 模型进行进一步细化, 提高并行度.
 其采用异步执行模式, 即可以使用相邻顶点或边中存储的最新数据来更新当前顶点状态.
 采用异步模式将不可避免的面临数据竞争问题, 例如:
@@ -542,6 +584,11 @@ GraphLab~\cite{DBLP:journals/pvldb/LowGKBGH12}
 这就要求存在数据竞争的顶点之间需要按照一定的顺序串行执行,
 GraphLab 利用顶点着色、分布式锁等机制来确保存在竞态的顶点被顺序执行,
 而不存在竞态的顶点能够被并行执行.
+
+Border vertices are provided locally cached ghost copies of remote neighbors,
+where consistency between ghosts and the original vertex
+is maintained using pipelined distributed locking.
+
 GraphLab 将需要被处理的顶点置入集合 T, 从集合 T 中取出顶点进行处理,
 同时将 Receiver 从 T 中移出, 需要被处理的顶点又被动态地加入到集合 T 中.
 当集合 T 为空时, 执行结束.
@@ -551,7 +598,16 @@ PowerGraph~\cite{DBLP:conf/osdi/GonzalezLGBG12}
 基于 GraphLab, 利用``长尾''现象来优化子图划分,
 尽可能地实现负载均衡和最小化通信与存储开销.
 其提出了顶点分割方案, 即对于度较高的顶点进行分割,
-分割开来的边被放置到不同的节点, 每个节点只需要维护被分割的顶点的镜像即可.
+分割开来的边被放置到不同的节点, 每个节点只需要维护被分割的顶点的镜像.
+Consistency across cached mirrors of the cut vertex
+is maintained using parallel Chandy-Misra locking.
+For distributed shared memory, the graph is cut along vertex C,
+where C1 is arbitrarily chosen as the master and C2 as the mirror.
+C2 compute a partial result based on local neighbors,
+the partial result is sent over the network from the mirror C2 to the master C1,
+the master computes the final result for the iteration.
+Such vertex cuts and three-phase computation can overcome processing challenges
+like imbalances arising from high-degree vertices in scale-free graphs.
 
 GAS 模型具有更好的灵活性, 适应大多数图算法,
 并发任务间不需要数据同步过程, 每个并发任务在任意时刻都可以对全局参数进行读和更新,
