@@ -400,6 +400,10 @@ then neighboring vertices aren’t activated
 \end{figure}
 
 \subsubsection{Graph Partitioning}
+Given the common lack of structure of the computation,
+it becomes very challenging to find the right graph partitioning strategy
+that can maximize the locality of processing and achieve good load balancing.
+
 Vertex-cut algorithms assign edges to partitions through vertices,
 whlie Edge-cut algorithms assign vertices to partitions through edges.
 
@@ -517,7 +521,7 @@ to implement on graph accelerators for the sophisticated hardware design.
 \subsection{图计算系统分类}
 按架构分类:
 \begin{compactitem}
-  \item 单机图计算系统: 指在单机上利用多核CPU, 大内存和多线程并行等进行大规模图计算.
+  \item 单机: 指在单机上利用多核CPU, 大内存和多线程并行等进行大规模图计算.
   这类系统通过减少磁盘随机写操作, 避免高昂的通信开销,
   采用并行化技术来充分挖掘多核计算资源来处理大规模图数据,
   在图的规模不是很大的情况下, 能在可接受的时间范围内完成任务,
@@ -531,9 +535,11 @@ to implement on graph accelerators for the sophisticated hardware design.
   FlashGraph~\cite{DBLP:conf/fast/ZhengMBVPS15},
   GridGraph~\cite{DBLP:conf/usenix/ZhuHC15},
   PathGraph~\cite{DBLP:journals/tpds/YuanXLJ16}.
-  \item 分布式图计算系统: Pregel~\cite{DBLP:conf/sigmod/MalewiczABDHLC10},
+  \item 分布式: Pregel~\cite{DBLP:conf/sigmod/MalewiczABDHLC10},
   GraphLab~\cite{DBLP:journals/pvldb/LowGKBGH12},
   PowerGraph~\cite{DBLP:conf/osdi/GonzalezLGBG12},
+  Trinity~\cite{DBLP:conf/sigmod/ShaoWL13},
+  Pregelix~\cite{DBLP:journals/pvldb/BuBJCC14},
   PowerLyra~\cite{DBLP:conf/eurosys/ChenSCC15},
   PowerSwitch~\cite{DBLP:conf/ppopp/XieCGZC15},
   Polymer~\cite{DBLP:conf/ppopp/ZhangCC15},
@@ -576,10 +582,11 @@ X-Stream~\cite{DBLP:conf/sosp/RoyMZ13}具有以下特点:
 \end{compactitem}
 
 \subsection{TurboGraph}
-TurboGraph~\cite{DBLP:conf/kdd/HanLPL0KY13}设计了一种页结构,
-只需加载部分图结构,基于 pin-and-slide 模型, 设计了两种不同类型的线程，
-即执行线程和回调线程, 且执行线程和 I/O 回调线程可以并行处理,
-从而提高了线程间的并行度, 避免了迭代过程中大量中间结果访问磁盘开销,
+TurboGraph~\cite{DBLP:conf/kdd/HanLPL0KY13}
+设计了一种页结构, 只需加载部分图结构, 基于 pin-and-slide 模型,
+设计了两种不同类型的线程, 即执行线程和回调线程,
+且执行线程和 I/O 回调线程可以并行处理, 从而提高了线程间的并行度,
+避免了迭代过程中大量中间结果访问磁盘开销,
 并利用固态硬盘实现磁盘读写和计算的并行化, 提高了图计算的整体性能。
 
 \subsection{Ligra}
@@ -713,7 +720,8 @@ destination vertex IDs are typically obtained by iterating over outgoing edges
 GraphLab~\cite{DBLP:journals/pvldb/LowGKBGH12}
 是一种基于 \textit{GAS} 模型的 \textit{Shared Memory} 分布式图处理系统,
 对 BSP 模型进行进一步细化, 提高并行度.
-其采用异步执行模式, 即可以使用相邻顶点或边中存储的最新数据来更新当前顶点状态.
+GraphLab offers two executionmodes: synchronous and asynchronous.
+其主要采用异步执行模式, 即可以使用相邻顶点或边中存储的最新数据来更新当前顶点状态.
 采用异步模式将不可避免的面临数据竞争问题, 例如:
 正在处理顶点 V 的函数需要访问邻接顶点,
 而邻接顶点此刻正在更新其状态;
@@ -723,20 +731,26 @@ GraphLab~\cite{DBLP:journals/pvldb/LowGKBGH12}
 这就要求存在数据竞争的顶点之间需要按照一定的顺序串行执行,
 GraphLab 利用顶点着色、分布式锁等机制来确保存在竞态的顶点被顺序执行,
 而不存在竞态的顶点能够被并行执行.
+GraphLab automatically enforces serializability
+by preventing adjacent vertex programs from running concurrently
+by using a fine-grained locking protocol
+that requires sequentially grabbing locks on all neighbouring vertices.
 
 Border vertices are provided locally cached ghost copies of remote neighbors,
 where consistency between ghosts and the original vertex
 is maintained using pipelined distributed locking.
-
 GraphLab 将需要被处理的顶点置入集合 T, 从集合 T 中取出顶点进行处理,
 同时将 Receiver 从 T 中移出, 需要被处理的顶点又被动态地加入到集合 T 中.
 当集合 T 为空时, 执行结束.
+
+GraphLab’s asynchronous mode has poor scalability and performance
+due to communication overheads.
 
 \subsection{PowerGraph}
 PowerGraph~\cite{DBLP:conf/osdi/GonzalezLGBG12}
 基于 GraphLab, 利用``长尾''现象来优化子图划分,
 尽可能地实现负载均衡和最小化通信与存储开销.
-其提出了顶点分割方案, 即对于度较高的顶点进行分割,
+其提出了顶点分割 (vertex-cut) 方案, 即对于度较高的顶点进行分割,
 分割开来的边被放置到不同的节点, 每个节点只需要维护被分割的顶点的镜像.
 Consistency across cached mirrors of the cut vertex
 is maintained using parallel Chandy-Misra locking.
@@ -753,6 +767,35 @@ An accumulator value is the result of the gather step.
 With delta-caching, a cached copy of the accumulator for each vertex is stored by the worker.
 For a given update with only minimal change ($\delta$),
 then neighboring vertices aren’t activated
+
+\subsection{Trinity}
+Trinity~\cite{DBLP:conf/sigmod/ShaoWL13} is amemory-based distributed system
+which focuses on optimizing memory and communication cost under the assumption
+that the whole graph is partitioned across a memory cloud.
+The memory cloud is essentially a distributed key-value store
+which is supported by a memory storage module and a message passing framework.
+Trinity organizes the memory of multiple machines into a globally addressable,
+distributed memory address space (a memory cloud) to support large graphs.
+
+A Trinity system consists of slaves, proxies, and clients,
+slaves to store data and perform computation,
+proxies to handle messages (not store data),
+clients for users to intreact with the Trinity cluster.
+
+Trinity is designed to support fast graph exploration
+as well as efficient parallel graph computations.
+
+\subsection{Preglix}
+Pregelix~\cite{DBLP:journals/pvldb/BuBJCC14}
+takes a novel set-oriented, iterative \textit{dataflow} approach
+to implementing the user-level Pregel programming model.
+It does so by treating the messages and vertex states
+in a Pregel computation like tuples with a well-defined schema;
+it then uses database-style query evaluation techniques to execute the user’s program.
+From a runtime perspective, Pregelix models Pregel’s semantics as a logical query plan
+and implements those semantics as an iterative dataflow of relational operators
+that treat message exchange as a join followed by a group-by operation
+that embeds functions that capture the user’s Pregel program.
 
 \subsection{PowerLyra}
 PowerLyra~\cite{DBLP:conf/eurosys/ChenSCC15}
@@ -833,7 +876,7 @@ overlap computation and inter-node communication tasks.
 \clearpage
 
 \section{FPGA}
-FPGA in Data Center~\cite{DBLP:conf/isca/PutnamCCCCDEFGGHHHHKLLPPSTXB14}.
+FPGA in Data Center~\cite{DBLP:conf/isca/Putnam14}.
 
 \begin{compactitem}
   \item cpu 通用.
