@@ -285,12 +285,34 @@ The user also defines a vertex update function,
 which is executed by the path-centric functions during the traversal.
 The path-centric model utilizes locality to improve performance
 through reduced memory usage and efficient caching.
-\subsubsection{GAS}
+\subsubsection{BSP Model}
+计算由一系列称为超步 (Superstep) 的通过全局同步分开的计算步骤组成,
+采用块间同步处理, 块内异步并行的计算.
+并行任务按照超步组织, 接收来自上一个超步的消息, 执行本地计算并发送消息给下一个超步.
+每个超步包含了三个过程:
+\begin{compactitem}
+  \item 本地计算: 每个工作节点读取其本地数据异步地执行计算.
+  \item 消息通信: 
+  每个参与计算的工作节点将消息发给与之相连的其它工作节点以相互交换所需的数据.
+  \item 路障同步: 用于数据的全局同步，即块间同步，
+  每个工作节点在更新完自身的消息缓存并确一个超步.
+\end{compactitem}
+\subsubsection{GAS Model}
 GAS 模型具有更好的灵活性, 适应大多数图算法,
 并发任务间不需要数据同步过程, 每个并发任务在任意时刻都可以对全局参数进行读和更新,
 这提升了计算资源的利用率和整体任务的执行效率.
 但是仍有一定的缺陷: 假设某些任务由于硬件故障或者机器负载高,
 在迭代次数上严重滞后于其它任务, 则有可能使正确性无法得到完全保证.
+\begin{compactitem}
+  \item 以顶点为中心的 GAS, 可以 CSR/CSC 压缩, 可以快速地遍历顶点的边 (高效 Gather), 不需要原子操作.
+  数据预处理时, 对边集进行排序消耗可观; 
+  需要随机访问邻接节点, 当邻接节点不在内存时会产生磁盘随机访问.
+  \item 以边为中心的 GAS. 边集 E 远大于顶点集 V, 可以降低通信开销.
+  虽然可以处理无序边, 但无法压缩;
+  若多条边访问同一节点, 需要原子操作.
+  \item 以顶点为中心 GAS 计算模式适用于度高的顶点 (特别对于 Gather, 可以大量减少访存),
+  而以边为中心 GAS 计算模式适用于度低的顶点.
+\end{compactitem}
 
 \subsection{Schedule Timing}
 \subsubsection{Synchronous}
@@ -319,7 +341,7 @@ Such as PageRank, where vertices are ``always active'' so messaging is high,
 synchronous execution has been shown to significantly outperform asynchronous execution
 ~\cite{DBLP:journals/csur/McCuneWM15}.
 
-\subsection{Communication}
+\subsection{Communication Model}
 \subsubsection{Message Passing}
 Information is sent from one vertex program kernel to another via a message.
 A message contains local vertex data and is addressed to the ID of the recipient vertex.
@@ -377,14 +399,27 @@ then neighboring vertices aren’t activated
   \end{small}
 \end{figure}
 
+\subsubsection{Graph Partitioning}
+Vertex-cut algorithms assign edges to partitions through vertices,
+whlie Edge-cut algorithms assign vertices to partitions through edges.
+
+Large adjacency list partitioning (LALP) from GPS:
+Adjacency lists of high-degree vertices are not stored in a single worker,
+but rather are partitioned across workers.
+During execution, when u sends a message to all its neighbors,
+GPS intercepts the message and sends a single a message to each worker $W_j$,
+with $W_j$ delivering the message to all vertices in $N_j(u)$.
+
 \subsection{Optimization}
 \subsubsection{Communication}
 \begin{compactitem}
   \item minimize communication overhead.
   \item mirrors (edge cut/vertex cut/scatter vertex/combiner vertex)
   of high-degree vertices placed into distributed machines (PowerGraph).
+  Large adjacency list partitioning (LALP) from GPS takes same idea.
   Breaking up high-degree vertices reduces network communication
   and helps to balance computation.
+  \item balanced graph partition.
   \item synchronous batch messaging.
   \item coalescing multiple into single one.
   \item use of batching when inserting and removing
@@ -503,19 +538,6 @@ to implement on graph accelerators for the sophisticated hardware design.
   PowerSwitch~\cite{DBLP:conf/ppopp/XieCGZC15},
   Polymer~\cite{DBLP:conf/ppopp/ZhangCC15},
   Gemini~\cite{DBLP:conf/osdi/ZhuCZM16}.
-\end{compactitem}
-
-按计算模型分类:
-\begin{compactitem}
-  \item BSP.
-  \item 以顶点为中心的 GAS, 可以 CSR/CSC 压缩, 可以快速地遍历顶点的边 (高效 Gather), 不需要原子操作
-  数据预处理时, 对边集进行排序消耗可观; 
-  需要随机访问邻接节点, 当邻接节点不在内存时会产生磁盘随机访问.
-  \item 以边为中心的 GAS. 边集 E 远大于顶点集 V, 可以降低通信开销.
-  虽然可以处理无序边, 但无法压缩;
-  若多条边访问同一节点, 需要原子操作.
-  \item 以顶点为中心 GAS 计算模式适用于度高的顶点 (特别对于 Gather, 可以大量减少访存),
-  而以边为中心 GAS 计算模式适用于度低的顶点.
 \end{compactitem}
 
 \subsection{GraphChi}
@@ -660,6 +682,12 @@ BSP 模型是一种基于\textit{消息通信 (Message Passing) }的并行计算
   \item 路障同步: 用于数据的全局同步，即块间同步，
   每个工作节点在更新完自身的消息缓存并确一个超步.
 \end{compactitem}
+
+Pregel uses a master/workers model where
+the master node is responsible for coordinating synchronization at the superstep barriers
+while each worker independently invokes and executes the compute() function
+on the vertices of its assigned portion of the graph
+and maintains the message queue to receive messages from the vertices of other workers.
 
 Vertices do not have ID information of all of the other vertices,
 destination vertex IDs are typically obtained by iterating over outgoing edges
