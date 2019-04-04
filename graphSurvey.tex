@@ -673,6 +673,17 @@ The efficient computational model and storage structure of PathGraph
 resulted in improved graph loading time, lower memory footprint
 and faster runtime for certain algorithms.
 
+\subsection{MapReduce}
+MapReduce~\cite{DBLP:conf/osdi/DeanG04}
+has several limitations that make it less efficient
+for processing large graphs~\cite{DBLP:journals/csur/HeidariSCB18}:
+\begin{compactitem}
+  \item limited to a two-phased computational model.
+  \item limited tuple-based data structure.
+  \item input graph and internal state are not retained in main memory,
+  leading to \textit{poor I/O efficiency}.
+\end{compactitem}
+
 \subsection{Pregel}
 Pregel~\cite{DBLP:conf/sigmod/MalewiczABDHLC10}
 是一种基于 \textit{BSP} 模型, 以\textit{顶点为中心}的分布式图处理系统.
