@@ -1133,6 +1133,14 @@ Accessing different rows from one bank is slowest.
 \subsection{HBM}
 \label{sub:HBM}
 \subsubsection{AXI}
+AXI协议是基于 burst 的传输,
+并且定义了以下5个独立的传输通道:
+读地址通道、读数据通道、写地址通道、写数据通道、写响应通道.
+地址通道携带控制消息用于描述被传输的数据属性,
+数据传输使用写通道来实现``主''到``从''的传输,
+``从''使用写响应通道来完成一次写传输;
+读通道用来实现数据从``从''到``主''的传输.
+
 The AXI (Advanced eXtensible Interface) protocol
 includes AXI ID transaction identifiers.
 A master can use these to identify separate transactions that must be returned in order.
