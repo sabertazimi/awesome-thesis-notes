@@ -1132,6 +1132,15 @@ Accessing different rows from one bank is slowest.
 
 \subsection{HBM}
 \label{sub:HBM}
+\subsubsection{AXI}
+The AXI (Advanced eXtensible Interface) protocol
+includes AXI ID transaction identifiers.
+A master can use these to identify separate transactions that must be returned in order.
+All transactions with a given AXI ID value must remain ordered,
+but there is no restriction on the ordering of transactions with \textit{different ID} values.
+This means a single physical port can support out-of-order transactions
+by acting as a number of logical ports,
+each of which handles its transactions in order.
 
 % subsection HBM (end)
 
