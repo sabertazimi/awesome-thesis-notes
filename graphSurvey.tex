@@ -955,11 +955,22 @@ are terminated successfully and all the FIFO queues are empty.
 Graphs get more sparse, CyGraph obtains higher speedups
 and comes quite close to its peak performance.
 
+\subsection{GraphGen}
+GraphGen ~\cite{DBLP:conf/fccm/NurvitadhiWWHNH14}
+is a generic vertex-centric FPGA-based graph processing framework.
+It has been designed to get vertex-centric specifications
+and create FPGA implementations for targeted platforms.
+The problem with GraphGen is that it keeps the entire graph
+inside the on-board DRAM that limits the scalability of the system remarkably
+
 \subsection{FPGP}
 In FPGP~\cite{DBLP:conf/fpga/DaiCWY16},
 there is a Shared-Vertex Memory (SVM) connected to all FPGAs.
 Such implementation limits the scalability to multi-FPGA
 because the total bandwidth of SVM is limited.
+Although it has been shown that FPGP
+does not perform as good as CPU-based single server frameworks,
+it shows the mechanism of FPGA-based generic graph processing systems well.
 
 \subsection{ForeGraph}
 ForeGraph~\cite{DBLP:conf/fpga/DaiHCXWY17}
