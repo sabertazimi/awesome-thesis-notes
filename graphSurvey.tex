@@ -808,6 +808,20 @@ and implements those semantics as an iterative dataflow of relational operators
 that treat message exchange as a join followed by a group-by operation
 that embeds functions that capture the user’s Pregel program.
 
+Pregelix has been developed to address three main challenges
+in distributed Pregel-like systems: (1)
+\begin{compactitem}
+  \item many Pregellike systems have limitations to support out-of-core vertex-storage.
+  \item existing Pregel-like systems have \textit{specific} strategies and implementations
+  for communication, node storage, message delivery.
+  A user cannot choose between different implementation strategies based on
+  what is better for a particular algorithm, dataset or cluster.
+  Pregelix improves physical flexibility and scalability of the processing system.
+  \item  Pregelix tries to leverage current data-parallel platforms to
+  streamline the implementation of Pregel-like systems.
+\end{compactitem}
+
+
 \subsection{PowerLyra}
 PowerLyra~\cite{DBLP:conf/eurosys/ChenSCC15}
 is a modification to PowerGraph that hybridizes partitioning
