@@ -262,6 +262,14 @@ Vertex programs only depend on data local to a vertex
 and reduce computational complexity by increasing communication between program kernels.
 As a result, TLAV frameworks are highly scalable and inherently parallel,
 with manageable intermachine communication~\cite{DBLP:journals/csur/McCuneWM15}.
+
+In the vertex-centric model, a vertex is very short sighted:
+it only has information about its immediate neighbors,
+therefore information is propagated through graphs slowly,
+\textit{one hop at a time}.
+As a result, it takes many computation steps
+to propagate a piece of information from a source to a destination,
+even if both appear in the same graph partition~\cite{DBLP:journals/csur/HeidariSCB18}.
 \subsubsection{Edge Centric Paradigm}
 Edge-centric paradigm is lack of flexible scheduling potential
 in contrast to the vertex-centric one.
