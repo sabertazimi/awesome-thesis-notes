@@ -650,14 +650,25 @@ selective receiving of messages outside of the previous superstep.
 \subsection{PathGraph}
 PathGraph~\cite{DBLP:conf/sc/YuanZXJLL14}
 是一个采用路径中心计算模型的单机图计算系统, 通过构建前向边遍历树和后向边遍历树,
-将图算法的每次迭代计算分解为沿前向边遍历树更新数据和沿后向边遍历树收集消息的两步操作.
+将图算法的每次迭代计算分解为沿前向边遍历树更新数据和沿后向边遍历树收集消息的两步操作,
+which aims to leverage memory and disk locality
+on both out-of-core and in-memory graphs.
+
+The graph will be partitioned into paths
+including two forward and reverse edge traversal trees for each partition.
+It applies iterative computation per traversal tree partition in parallel,
+and then merges partitions by \textit{examining border vertices}.
+\textit{Gather} and \textit{Scatter} functions
+are used to traverse each tree by a user-defined algorithm.
+
 PathGraph implements a path-centric compact storage system
 that improves compactness and locality.
 Because most iterative graph algorithms involve path traversal,
 PathGraph stores edge-traversal trees in depth-first search order.
-Both the forward and reverse edge trees are each stored in a chunk storage structure
-that compresses data structure information
+Both the forward and reverse edge trees are
+each stored in a chunk storage structure that compresses data structure information
 including the adjacency set, vertex IDs, and the indexing of the chunk.
+
 The efficient computational model and storage structure of PathGraph
 resulted in improved graph loading time, lower memory footprint
 and faster runtime for certain algorithms.
