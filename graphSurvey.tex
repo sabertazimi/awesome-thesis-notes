@@ -283,6 +283,28 @@ A subgraph can be partitioned into a size small enough to fit into memory
 much less than the total number of edges.
 The system would better utilize processing while retaining scalability
 (Giraph++, Blogel)~\cite{DBLP:journals/csur/McCuneWM15}.
+
+In contrast to a vertex-centricmodel that hides partitioning
+and component connectivity details from users,
+Subgraph-centric graph processing system
+exposes the partition’s structure to the users to allow optimizations.
+So, the performance of the system depends on the partitioning strategy that is used
+and how effectively users exploit the access to the coarse components in their execution.
+On the other hand, communication within a partition is by \textit{direct memory access},
+which is faster than passing messages between each single vertex in a vertex-centric model.
+Vertices in the same partition can exchange their state
+and perform consequent computations to the extent possible \textit{in the same iteration}
+~\cite{DBLP:journals/csur/HeidariSCB18}.
+
+However, subgraph-centric programming algorithms are vulnerable
+to imbalances in the number of subgraphs per iteration
+as well as non-uniformity in their sizes.
+The time complexity per iteration also can be larger
+since it often runs the single machine graph algorithm on each subgraph,
+even as it often takes much fewer iterations.
+The benefits are also more pronounced for graphs with large diameter,
+rather than small-diameter power-law graphs
+~\cite{DBLP:journals/csur/HeidariSCB18}.
 \subsubsection{Path Centeric Paradigm}
 Amore specific type of subgraph, a traversal tree,
 is used for the programming model in PathGraph.
@@ -431,7 +453,9 @@ with $W_j$ delivering the message to all vertices in $N_j(u)$.
   Large adjacency list partitioning (LALP) from GPS takes same idea.
   Breaking up high-degree vertices reduces network communication
   and helps to balance computation.
-  \item balanced graph partition.
+  \item banlanced graph partition and workload.
+  \item subgraph-aware partition to get more information in an iteration (faster convergence)
+  and reduce message passing among different processing units.
   \item synchronous batch messaging.
   \item coalescing multiple into single one.
   \item use of batching when inserting and removing
