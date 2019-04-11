@@ -531,10 +531,10 @@ to implement on graph accelerators for the sophisticated hardware design.
   TurboGraph~\cite{DBLP:conf/kdd/HanLPL0KY13},
   Ligra~\cite{DBLP:conf/ppopp/ShunB13},
   Galois~\cite{DBLP:conf/sosp/NguyenLP13},
+  PathGraph~\cite{DBLP:conf/sc/YuanZXJLL14},
   GRACE~\cite{DBLP:conf/cidr/WangXDG13}
   FlashGraph~\cite{DBLP:conf/fast/ZhengMBVPS15},
-  GridGraph~\cite{DBLP:conf/usenix/ZhuHC15},
-  PathGraph~\cite{DBLP:journals/tpds/YuanXLJ16}.
+  GridGraph~\cite{DBLP:conf/usenix/ZhuHC15}.
   \item 分布式: Pregel~\cite{DBLP:conf/sigmod/MalewiczABDHLC10},
   GraphLab~\cite{DBLP:journals/pvldb/LowGKBGH12},
   PowerGraph~\cite{DBLP:conf/osdi/GonzalezLGBG12},
@@ -579,6 +579,8 @@ X-Stream~\cite{DBLP:conf/sosp/RoyMZ13}具有以下特点:
   \item X-Stream在计算过程中，每轮迭代产生的更新集非常庞大，接近于边的数量级.
   \item 需要对更新集中的边进行 shuffle 操作.
   \item 缺乏选择调度机制，产生了大量的无用计算.
+  \item X-Stream is not suitable for graphs and algorithms that require many iterations
+  ~\cite{DBLP:conf/sc/YuanZXJLL14}.
 \end{compactitem}
 
 \subsection{TurboGraph}
@@ -612,6 +614,21 @@ explores dynamic scheduling within a single superstep.
 GRACE exposes a programming interface (from within a given superstep)
 allows for prioritized execution of vertices and
 selective receiving of messages outside of the previous superstep.
+
+\subsection{PathGraph}
+PathGraph~\cite{DBLP:conf/sc/YuanZXJLL14}
+是一个采用路径中心计算模型的单机图计算系统, 通过构建前向边遍历树和后向边遍历树,
+将图算法的每次迭代计算分解为沿前向边遍历树更新数据和沿后向边遍历树收集消息的两步操作.
+PathGraph implements a path-centric compact storage system
+that improves compactness and locality.
+Because most iterative graph algorithms involve path traversal,
+PathGraph stores edge-traversal trees in depth-first search order.
+Both the forward and reverse edge trees are each stored in a chunk storage structure
+that compresses data structure information
+including the adjacency set, vertex IDs, and the indexing of the chunk.
+The efficient computational model and storage structure of PathGraph
+resulted in improved graph loading time, lower memory footprint
+and faster runtime for certain algorithms.
 
 \subsection{FlashGraph}
 FlashGraph~\cite{DBLP:conf/fast/ZhengMBVPS15}
@@ -657,21 +674,6 @@ GridGraph~\cite{DBLP:conf/usenix/ZhuHC15} 是以边为中心的核外单机图�
 \begin{compactitem}
   \item 折线式的边 block 遍历策略不能达到最大化的Cache/Memory命中率.
 \end{compactitem}
-
-\subsection{PathGraph}
-PathGraph~\cite{DBLP:journals/tpds/YuanXLJ16}
-是一个采用路径中心计算模型的单机图计算系统, 通过构建前向边遍历树和后向边遍历树,
-将图算法的每次迭代计算分解为沿前向边遍历树更新数据和沿后向边遍历树收集消息的两步操作.
-PathGraph implements a path-centric compact storage system
-that improves compactness and locality.
-Because most iterative graph algorithms involve path traversal,
-PathGraph stores edge-traversal trees in depth-first search order.
-Both the forward and reverse edge trees are each stored in a chunk storage structure
-that compresses data structure information
-including the adjacency set, vertex IDs, and the indexing of the chunk.
-The efficient computational model and storage structure of PathGraph
-resulted in improved graph loading time, lower memory footprint
-and faster runtime for certain algorithms.
 
 \subsection{MapReduce}
 MapReduce~\cite{DBLP:conf/osdi/DeanG04}
