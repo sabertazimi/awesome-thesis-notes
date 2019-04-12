@@ -423,12 +423,17 @@ whlie Edge-cut algorithms assign vertices to partitions through edges.
 In a k-way partitioning, the graph is partitioned into $K$ smaller parts of equal size
 while minimizing the edge cuts between partitions.
 
-Large adjacency list partitioning (LALP) from GPS:
+Large adjacency list partitioning (LALP) from GPS~\cite{DBLP:conf/ssdbm/SalihogluW13}:
 Adjacency lists of high-degree vertices are not stored in a single worker,
 but rather are partitioned across workers.
 During execution, when u sends a message to all its neighbors,
 GPS intercepts the message and sends a single a message to each worker $W_j$,
 with $W_j$ delivering the message to all vertices in $N_j(u)$.
+
+Spinner~\cite{DBLP:conf/icde/MartellaLLS17} on top of Giraph
+and utilizes an \textit{iterative node migration} approach
+using a \textit{label propagation} algorithm to
+deal with scalability and changing partitions.
 \subsection{Communication Model}
 \subsubsection{Message Passing}
 Information is sent from one vertex program kernel to another via a message.
