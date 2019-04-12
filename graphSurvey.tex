@@ -354,22 +354,54 @@ Synchronous has these characteristics~\cite{DBLP:journals/csur/McCuneWM15}:
   Each superstep takes as long as the \textbf{slowest} vertex.
   \item synchronous algorithms may not converge in some instances.
 \end{compactitem}
+
+The bulk messaging at iteration boundaries can utilize the bandwidth
+efficiently if there is heavy communication between partitions.
+It is easy to program, debug, and deploy such systems,
+without concerns of distributed race conditions and deadlocks.
+Synchronous execution is suitable for balanced workloads that are computed symmetrically
+~\cite{DBLP:journals/csur/HeidariSCB18}.
+
+This model is not suitable for unbalanced workloads
+in which computation converges asymmetrically.
+One slower worker which has not finished and
+hence delays all workers in the superstep.
+A synchronous execution model is ill-suited
+for applications and algorithms that need coordination between \textit{adjacent vertices},
+such as graph coloring algorithm
+(two adjacent vertices might pick conflicting colors frequently in this model)
+~\cite{DBLP:journals/csur/HeidariSCB18}.
+
 \subsubsection{Asynchronous}
-Asynchronous has these characteristics~\cite{DBLP:journals/csur/McCuneWM15}:
+Asynchronous has these characteristics
+~\cite{DBLP:journals/csur/McCuneWM15}
+~\cite{DBLP:journals/csur/HeidariSCB18}:
 \begin{compactitem}
-  \item no explicit synchronization points, no straggler problem
-  \item providing more execution flexibility
+  \item no explicit synchronization points, no straggler problem.
+  \item providing more execution flexibility by dynamic workloads.
   \item many asynchronous models outperform corresponding synchronous models
   (especially for imbalanced workload),
   but more complex (scheduling logic and maintaining data consistency).
   \item cannot take advantage of batch messaging optimizations.
 \end{compactitem}
 
+Asynchronous model addressed challenges of
+load balancing and long tail computation in the synchronous model.
+This approach is useful when the workload is imbalanced
+and \textit{convergence can occur faster} than synchronous approach.
+
+The key disadvantage is that programming asynchronous processing systems
+is more difficult than synchronous systems.
+The programmer should deal with irregular communication intervals,
+unpredictable response time, complex error handling
+and more complicated scheduling issues
+~\cite{DBLP:journals/csur/HeidariSCB18}.
+
 Synchronous execution generally accommodates I/O-bound algorithms,
 while asynchronous execution well-serves CPU-bound algorithms.
 Such as PageRank, where vertices are ``always active'' so messaging is high,
 synchronous execution has been shown to significantly outperform asynchronous execution
-~\cite{DBLP:journals/csur/McCuneWM15}.
+~\cite{DBLP:journals/csur/McCuneWM15}~\cite{DBLP:journals/csur/HeidariSCB18}.
 
 \subsection{Communication Model}
 \subsubsection{Message Passing}
