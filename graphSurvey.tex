@@ -433,7 +433,7 @@ though the latter often demonstrate better scalability and generalization
 \subsection{Information Flow}
 \subsubsection{Push}
 Push information to neighbors, write to state of others:
-Good when few vertices are active, but Needs locks.
+Good when few vertices are active, but needs locks.
 \subsubsection{Pull}
 Pull information from neighbors, write to own state:
 Good when many vertices are active, Locks can be avoided.
@@ -443,7 +443,7 @@ Delta-caching optimization is helpful for such case~\cite{DBLP:conf/osdi/Gonzale
 An accumulator value is the result of the gather step.
 With delta-caching, a cached copy of the accumulator for each vertex is stored by the worker.
 For a given update with only minimal change ($\delta$),
-then neighboring vertices aren’t activated
+then neighboring vertices aren’t activated.
 
 \begin{figure}
   \begin{small}
@@ -468,9 +468,13 @@ then neighboring vertices aren’t activated
 Given the common lack of structure of the computation,
 it becomes very challenging to find the right graph partitioning strategy
 that can maximize the locality of processing and achieve good load balancing.
+It's an NP-complete problem~\cite{DBLP:conf/spaa/AndreevR04}.
 
 Vertex-cut algorithms assign edges to partitions through vertices,
 whlie Edge-cut algorithms assign vertices to partitions through edges.
+
+In a k-way partitioning, the graph is partitioned into $K$ smaller parts of equal size
+while minimizing the edge cuts between partitions.
 
 Large adjacency list partitioning (LALP) from GPS:
 Adjacency lists of high-degree vertices are not stored in a single worker,
