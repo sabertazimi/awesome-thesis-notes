@@ -359,7 +359,10 @@ The bulk messaging at iteration boundaries can utilize the bandwidth
 efficiently if there is heavy communication between partitions.
 It is easy to program, debug, and deploy such systems,
 without concerns of distributed race conditions and deadlocks.
-Synchronous execution is suitable for balanced workloads that are computed symmetrically
+Synchronous execution is suitable for balanced workloads that are computed symmetrically.
+The number of vertices involved in the computation increase,
+which means that the number of messages passing among them increase,
+this is suitable for a synchronous execution model (\textit{I/O bounded})
 ~\cite{DBLP:journals/csur/HeidariSCB18}.
 
 This model is not suitable for unbalanced workloads
@@ -461,7 +464,7 @@ then neighboring vertices aren’t activated
   \end{small}
 \end{figure}
 
-\subsubsection{Graph Partitioning}
+\subsection{Graph Partitioning}
 Given the common lack of structure of the computation,
 it becomes very challenging to find the right graph partitioning strategy
 that can maximize the locality of processing and achieve good load balancing.
