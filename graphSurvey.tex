@@ -406,6 +406,29 @@ Such as PageRank, where vertices are ``always active'' so messaging is high,
 synchronous execution has been shown to significantly outperform asynchronous execution
 ~\cite{DBLP:journals/csur/McCuneWM15}~\cite{DBLP:journals/csur/HeidariSCB18}.
 
+\subsection{Graph Partitioning}
+Given the common lack of structure of the computation,
+it becomes very challenging to find the right graph partitioning strategy
+that can maximize the locality of processing and achieve good load balancing.
+It's an NP-complete problem~\cite{DBLP:conf/spaa/AndreevR04}.
+
+METIS~\cite{DBLP:conf/icpp/KarypisK95} is a popular tool that uses multi-level partitioning.
+It performs high quality partitioning reducing communication (edge cuts) and imbalances.
+ParMETIS is a parallel MPI-based version of METIS
+that mitigates some of these performance limitations.
+
+Vertex-cut algorithms assign edges to partitions through vertices,
+whlie Edge-cut algorithms assign vertices to partitions through edges.
+
+In a k-way partitioning, the graph is partitioned into $K$ smaller parts of equal size
+while minimizing the edge cuts between partitions.
+
+Large adjacency list partitioning (LALP) from GPS:
+Adjacency lists of high-degree vertices are not stored in a single worker,
+but rather are partitioned across workers.
+During execution, when u sends a message to all its neighbors,
+GPS intercepts the message and sends a single a message to each worker $W_j$,
+with $W_j$ delivering the message to all vertices in $N_j(u)$.
 \subsection{Communication Model}
 \subsubsection{Message Passing}
 Information is sent from one vertex program kernel to another via a message.
@@ -463,25 +486,6 @@ then neighboring vertices aren’t activated.
     \label{fig:everythinggraph2}
   \end{small}
 \end{figure}
-
-\subsection{Graph Partitioning}
-Given the common lack of structure of the computation,
-it becomes very challenging to find the right graph partitioning strategy
-that can maximize the locality of processing and achieve good load balancing.
-It's an NP-complete problem~\cite{DBLP:conf/spaa/AndreevR04}.
-
-Vertex-cut algorithms assign edges to partitions through vertices,
-whlie Edge-cut algorithms assign vertices to partitions through edges.
-
-In a k-way partitioning, the graph is partitioned into $K$ smaller parts of equal size
-while minimizing the edge cuts between partitions.
-
-Large adjacency list partitioning (LALP) from GPS:
-Adjacency lists of high-degree vertices are not stored in a single worker,
-but rather are partitioned across workers.
-During execution, when u sends a message to all its neighbors,
-GPS intercepts the message and sends a single a message to each worker $W_j$,
-with $W_j$ delivering the message to all vertices in $N_j(u)$.
 
 \subsection{Optimization}
 \subsubsection{Communication}
