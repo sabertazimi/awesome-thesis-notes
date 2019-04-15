@@ -434,6 +434,27 @@ Spinner~\cite{DBLP:conf/icde/MartellaLLS17} on top of Giraph
 and utilizes an \textit{iterative node migration} approach
 using a \textit{label propagation} algorithm to
 deal with scalability and changing partitions.
+\subsubsection{Dynamic Partitioning}
+According to GPS~\cite{DBLP:conf/ssdbm/SalihogluW13},
+three major questions should be answered in a dynamic repartitioning process:
+\begin{compactitem}
+  \item which nodes should be reallocated.
+  \item when and how to transfer the reallocated nodes to their new workers.
+  \item how to place the reallocated nodes.
+\end{compactitem}
+Some researchers have also shown that
+dynamic repartitioning does not offer significant performance improvements
+except under particular conditions.
+The vertices in a PageRank algorithm are always active,
+which makes dynamic repartitioning moot
+due to predictable and stationary load through the entire application’s lifetime
+~\cite{DBLP:journals/csur/HeidariSCB18}.
+\subsubsection{Vertex-Cut Partitioning}
+The degree distribution is skewed,
+balancing the number of vertices in each partition does not guarantee workload balance.
+Therefore, for natural graphs (that have power-law degree distribution),
+vertex-cut partitioning (edge-centric) approach can obtain better workload balance.
+
 \subsection{Communication Model}
 \subsubsection{Message Passing}
 Information is sent from one vertex program kernel to another via a message.
