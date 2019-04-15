@@ -478,21 +478,29 @@ Asynchronous sharedmemory systems can potentially outperform
 synchronous message-passing systems,
 though the latter often demonstrate better scalability and generalization
 ~\cite{DBLP:journals/csur/McCuneWM15}.
-
-\subsection{Information Flow}
-\subsubsection{Push}
+\subsubsection{Push/Pull Model}
 Push information to neighbors, write to state of others:
 Good when few vertices are active, but needs locks.
-\subsubsection{Pull}
 Pull information from neighbors, write to own state:
 Good when many vertices are active, Locks can be avoided.
 Communication becomes redundant when neighboring vertices aren't active.
 
+Pushing entails more write conflicts that must be resolved with locks or atomics,
+traversals (BFS, SSSP) entail more read conflicts with pulling.
+Pulling reduces synchronization compared to pushing,
+pushing limits communication (e.g., the number of memory reads in BFS).
+~\cite{DBLP:conf/hpdc/BestaPGSH17}
+
+\subparagraph{Optimization} The number of excessive reads/writes can be reduced by
+accessing only a fraction of vertices in each iteration
+(the \textit{Frontier-Exploit} strategy)~\cite{DBLP:conf/hpdc/BestaPGSH17}.
 Delta-caching optimization is helpful for such case~\cite{DBLP:conf/osdi/GonzalezLGBG12}.
 An accumulator value is the result of the gather step.
 With delta-caching, a cached copy of the accumulator for each vertex is stored by the worker.
 For a given update with only minimal change ($\delta$),
 then neighboring vertices aren’t activated.
+Active-aware (number of active vertices) mode switching helps to limit the iteration count,
+use push mode when few active vertices while use pull mode when many active vertices.
 
 \begin{figure}
   \begin{small}
