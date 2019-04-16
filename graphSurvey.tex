@@ -229,13 +229,6 @@ so greatly improving performance will require a multifaceted approach.
   add more parallel pointer chases to the same thread.
 \end{compactitem}
 
-\subsection{Graph Algorithms}
-Differ in \# of active vertices per iteration:
-\begin{compactitem}
-  \item only a subset active: BFS (vertex-centric + CSR/CSC).
-  \item entire graph active: Pagerank, SpMV ...
-\end{compactitem}
-
 \subsection{Graph Representation}
 \begin{compactitem}
   \item adjacency lists: dynamic allocation/count sort/radix sort.
@@ -246,6 +239,60 @@ CSR 行压缩使得顶点的出边被连续存储, CSC 列压缩使得顶点的�
 若仅使用行压缩, 则可以连续地访问顶点的出边而需要随机访问顶点的入边.
 若同时使用行压缩和列压缩, 则图中所有的边将被存储两份,
 当修改边的值时, 存在数据同步的问题.
+
+\subsection{Graph Algorithms}
+Differ in \# of active vertices per iteration:
+\begin{compactitem}
+  \item only a subset active: BFS (vertex-centric + CSR/CSC).
+  \item entire graph active: Pagerank, SpMV ...
+\end{compactitem}
+\subsubsection{Combinatorial Abstraction for BFS}
+The level-synchronous BFS algorithm~\cite{DBLP:conf/ipps/AttiaJTJZ14}
+uses three sets of nodes as follows:
+\begin{compactitem}
+  \item Set of current nodes ($Q_c$).
+  \item Set of next nodes ($Q_n$).
+  \item Visited nodes ($V$).
+\end{compactitem}
+
+The algorithm starts with the root node in the current set.
+Iteratively, the algorithm visits all the nodes in $Q_c$,
+sets their level as the current level
+and collects the next-level set $Q_n$.
+In the next iteration, $Q_c$ is populated with values from $Q_n$,
+and $Q_n$ is cleared for the new level.
+
+\subsection{Enhanced CSR Format}
+$C[i]$ represents destination of i-nth outgoing edge.
+For bits of $R[i]$ (described in algorithm~\ref{alg:enhanced_csr}):
+\begin{compactitem}
+  \item $R[i]_0$ represent visit status.
+  \item $R[i]_1$ represnet existence of outgoing edge of $Node_i$.
+  \item $R[i]_{63...2}$:
+  when $R[i]_0 == 0$ (not visited),
+  $R[i]_{63...32}$ for neighbors' start offset
+  and $R[i]_{31...2}$ for neighbors' end offset
+  when $R[i]_0 == 1$ (visited),
+  $R[i]_{63...1}$ for visit level of $Node_i$.
+\end{compactitem}
+\begin{algorithm}
+  \floatname{algorithm}{Algorithm}
+  \algrenewcommand\algorithmicrequire{\textbf{Input: }}
+  \algrenewcommand\algorithmicensure{\textbf{Output: }}
+  \caption{Enhanced CSR Format}
+  \label{alg:enhanced_csr}
+  \begin{algorithmic}[1]
+    \For{$cur = R[i]_{63...32}:R[i]_{31...2}$}
+      \State $C[cur]$ ...
+    \EndFor
+  \end{algorithmic}
+\end{algorithm}
+\subsubsection{Algebraic Abstraction for BFS}
+Graph algorithms are expressed with basic linear algebra structures
+and operations such as a series of matrix-vector (MV) or matrix-matrix (MM) products
+over various semirings~\cite{DBLP:conf/fpl/UmurogluMJ15}.
+BFS based on MV uses no explicit locking or atomics
+and has a succinct description~\cite{DBLP:conf/ipps/BestaMSH17}.
 
 \subsection{Processing Model}
 \subsubsection{Vertex Centric Paradigm}
@@ -1023,20 +1070,30 @@ overlap computation and inter-node communication tasks.
 \clearpage
 
 \section{FPGA}
-FPGA in Data Center~\cite{DBLP:conf/isca/Putnam14}.
-
 \begin{compactitem}
   \item cpu 通用.
   \item gpu 高吞吐量.
   \item fpga 低延迟.
 \end{compactitem}
 
+General purpose CPUs are not ideal for such data accesses:
+They have fixed memory access granularity based on cache line sizes,
+do not offer flexible high-degree parallelism,
+and their caches do not work effectively for irregular graph processing
+that have little or no temporal and spatial locality.
+GPUs offer massive parallelism
+while exhibit significantly reduced performance
+when the internal cores do not execute the same instruction,
+which is common in graphs with varying degrees
+~\cite{DBLP:journals/corr/abs-1903-06697}.
+
 FPGA 比 CPU 和 GPU 能效高, 体系结构上的根本优势是无指令, 无需共享内存.
 缺少指令同时是 FPGA 的优势和软肋. 每做一点不同的事情, 就要占用一定的 FPGA 逻辑资源.
 如果要做的事情复杂或重复性不强, 就会占用大量的逻辑资源, 其中的大部分处于闲置状态.
 不管通信还是机器学习, 加密解密, 算法都是很复杂的,
 如果试图用 FPGA 完全取代 CPU, 势必会带来 FPGA 逻辑资源极大的浪费, 也会提高 FPGA 程序的开发成本.
-更实用的做法是 FPGA 和 CPU 协同工作, 局部性和重复性强的归 FPGA, 复杂的归 CPU.
+更实用的做法是 FPGA 和 CPU 协同工作, 局部性和重复性强的归 FPGA, 复杂的归 CPU
+~\cite{DBLP:conf/isca/Putnam14}.
 
 CPU 可以通过 PCIe 总线与 FPGA 直接通信, 无需通过基于共享内存（FPGA 片上内存）的批处理模式.
 通过 OpenCL 写 DRAM, 启动 kernel, 读 DRAM 一个来回, 需要 1.8 毫秒.
@@ -1327,47 +1384,6 @@ load imbalance and global memory access overhead.
   \item greedy-search.
   \item A*.
 \end{compactitem}
-
-The level-synchronous BFS algorithm~\cite{DBLP:conf/ipps/AttiaJTJZ14}
-uses three sets of nodes as follows:
-\begin{compactitem}
-  \item Set of current nodes ($Q_c$).
-  \item Set of next nodes ($Q_n$).
-  \item Visited nodes ($V$).
-\end{compactitem}
-
-The algorithm starts with the root node in the current set.
-Iteratively, the algorithm visits all the nodes in $Q_c$,
-sets their level as the current level
-and collects the next-level set $Q_n$.
-In the next iteration, $Q_c$ is populated with values from $Q_n$,
-and $Q_n$ is cleared for the new level.
-
-\subsection{Enhanced CSR Format}
-$C[i]$ represents destination of i-nth outgoing edge.
-For bits of $R[i]$ (described in algorithm~\ref{alg:enhanced_csr}):
-\begin{compactitem}
-  \item $R[i]_0$ represent visit status.
-  \item $R[i]_1$ represnet existence of outgoing edge of $Node_i$.
-  \item $R[i]_{63...2}$:
-  when $R[i]_0 == 0$ (not visited),
-  $R[i]_{63...32}$ for neighbors' start offset
-  and $R[i]_{31...2}$ for neighbors' end offset
-  when $R[i]_0 == 1$ (visited),
-  $R[i]_{63...1}$ for visit level of $Node_i$.
-\end{compactitem}
-\begin{algorithm}
-  \floatname{algorithm}{Algorithm}
-  \algrenewcommand\algorithmicrequire{\textbf{Input: }}
-  \algrenewcommand\algorithmicensure{\textbf{Output: }}
-  \caption{Enhanced CSR Format}
-  \label{alg:enhanced_csr}
-  \begin{algorithmic}[1]
-    \For{$cur = R[i]_{63...32}:R[i]_{31...2}$}
-      \State $C[cur]$ ...
-    \EndFor
-  \end{algorithmic}
-\end{algorithm}
 
 \section{Graph Survey Template}
 \begin{compactitem}
