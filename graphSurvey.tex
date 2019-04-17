@@ -599,15 +599,18 @@ use push mode when few active vertices while use pull mode when many active vert
   \item use of a bitmap to mark the vertices during the visit.
   \item FastForward queue (PPoPP'08).
 \end{compactitem}
-\subsubsection{Locality}
+\subsubsection{Memory Locality}
 \begin{compactitem}
   \item improve poor locality, such as
   hierarchical networks, distributed,
   shared and local caches, local and non-local memory,
   and various cache-coherence effects.
+  \item high rate of requests
+  \item large bursts of requests
+  \item sequential access pattern
   \item locality-aware vertices buffer.
   \item reshape cache hierachy.
-  \item software prefetching.
+  \item software prefetching (not very effect).
 \end{compactitem}
 \subsubsection{Parallelism}
 \begin{compactitem}
