@@ -250,6 +250,9 @@ Differ in \# of active vertices per iteration:
   \item entire graph active: Pagerank, SpMV ...
 \end{compactitem}
 \subsubsection{Combinatorial Abstraction for BFS}
+A work-efficient parallel breadth-first search algorithm
+~\cite{DBLP:conf/spaa/LeisersonS10}
+
 The level-synchronous BFS algorithm~\cite{DBLP:conf/ipps/AttiaJTJZ14}
 uses three sets of nodes as follows:
 \begin{compactitem}
@@ -1077,6 +1080,10 @@ Gemini design a co-scheduling mechanism to
 overlap computation and inter-node communication tasks.
 \clearpage
 
+\section{GPU}
+BFS on GPU~\cite{DBLP:conf/sc/LiuH15}
+\clearpage
+
 \section{FPGA}
 \begin{compactitem}
   \item cpu 通用.
@@ -1118,51 +1125,44 @@ For improving the locality of vertices on the BRAM,
 fine grained partitioning and dedicated data placement strategies
 are needed to increase the reuse rate of vertices on the BRAM.
 
+By exploiting massive parallelism, typically in the form of deep pipelines,
+arbitrarily complex computations can be implemented as a pipeline
+that can produce one result per cycle.
+
 Shortcoming:
 \begin{compactitem}
   \item limited resources (BRAM, PLE).
   \item limited frequency.
 \end{compactitem}
 
-\subsection{CyGraph}
-CyGraph~\cite{DBLP:conf/ipps/AttiaJTJZ14}
-targets to BFS algorithm:
-\begin{compactitem}
-  \item use special CSR data layout.
-  \item design optimized BFS algorithm targeting special CSR layout,
-  cuts down the number of external memory requests by least 50\%.
-\end{compactitem}
+\subsection{FPGA Architecture}
+Configurable logic blocks include lookup tables (LUTs) to implement combinatorial logic,
+flip-flops to implement registers, and a programmable interconnect.
 
-For each CSR row offset element, $R[i]$,
-use the least significant bit of the row index as a visited flag
-(0 as not vistied)
-The remaining bits of $R[i]$ are used as follows:
-\begin{compactitem}
-  \item if node i is visited,
-  the LSB of $R[i]$ will equal 1
-  and the remaining bits will be used for node level.
-  \item if node i is not visited,
-  the MSB bits from 63 to 32 will be used as row index
-  and the bits from 31 to 1 as neighbors count.
-\end{compactitem}
+Xilinx UltraScale+ devices add a new class of on-chip RAM called UltraRAM,
+that expose access ports of similar width to traditional block RAM,
+but have larger capacity, allowing large amounts of memory to be stored on the chip
+without requiring as many individual RAM blocks to be combined.
 
-CyGraph kernel as a pipeline of four stages.
-Pipeline stages are separated by a FIFO queues.
-In order to find out when the kernel finishes processing,
-every process counts all items it reads and writes.
-The kernel finishes when all of its processes
-are terminated successfully and all the FIFO queues are empty.
-
-Graphs get more sparse, CyGraph obtains higher speedups
-and comes quite close to its peak performance.
+\subsection{GraphStep}
+GraphStep~\cite{DBLP:conf/fccm/DeLorimierKMRERUKD06}
 
 \subsection{GraphGen}
-GraphGen ~\cite{DBLP:conf/fccm/NurvitadhiWWHNH14}
+GraphGen~\cite{DBLP:conf/fccm/NurvitadhiWWHNH14}
 is a generic vertex-centric FPGA-based graph processing framework.
 It has been designed to get vertex-centric specifications
 and create FPGA implementations for targeted platforms.
 The problem with GraphGen is that it keeps the entire graph
 inside the on-board DRAM that limits the scalability of the system remarkably
+
+\subsection{GraphOps}
+GraphOps~\cite{DBLP:conf/fpga/OguntebiO16}
+
+\subsection{GraVF}
+GraVF~\cite{DBLP:conf/fpl/EngelhardtS16}
+
+\subsection{Energy Efficient Processing}
+~\cite{DBLP:conf/fccm/ZhouCP16}
 
 \subsection{FPGP}
 In FPGP~\cite{DBLP:conf/fpga/DaiCWY16},
@@ -1172,6 +1172,18 @@ because the total bandwidth of SVM is limited.
 Although it has been shown that FPGP
 does not perform as good as CPU-based single server frameworks,
 it shows the mechanism of FPGA-based generic graph processing systems well.
+
+\subsection{ExtraV}
+Graph Virtualization is a technique proposed by ExtraV~\cite{DBLP:journals/pvldb/LeeKYCHNNJ17}.
+Use the accelerator to offload tasks related with
+graph decompression and filtering from the host processor.
+
+\subsection{Hardware transactional Memory}
+An architecture that consists of many lightweight multi-threaded processing engines,
+a global transactional shared memory, and a work scheduler~\cite{DBLP:conf/fpga/MaZC17}.
+
+\subsection{Dataflow Accelerator}
+Dataflow accelerator~\cite{DBLP:conf/icdcs/JinYLZL17}~\cite{DBLP:conf/IEEEpact/Yao0L0H18}
 
 \subsection{ForeGraph}
 ForeGraph~\cite{DBLP:conf/fpga/DaiHCXWY17}
@@ -1206,6 +1218,44 @@ FabGraph use 2 pipeline sets to overlap
 communication and computation,
 enhancing bandwidth of graph progressing.
 
+\subsection{CyGraph}
+CyGraph~\cite{DBLP:conf/ipps/AttiaJTJZ14}
+targets to BFS algorithm:
+\begin{compactitem}
+  \item use special CSR data layout.
+  \item design optimized BFS algorithm targeting special CSR layout,
+  cuts down the number of external memory requests by least 50\%.
+\end{compactitem}
+
+For each CSR row offset element, $R[i]$,
+use the least significant bit of the row index as a visited flag
+(0 as not vistied)
+The remaining bits of $R[i]$ are used as follows:
+\begin{compactitem}
+  \item if node i is visited,
+  the LSB of $R[i]$ will equal 1
+  and the remaining bits will be used for node level.
+  \item if node i is not visited,
+  the MSB bits from 63 to 32 will be used as row index
+  and the bits from 31 to 1 as neighbors count.
+\end{compactitem}
+
+CyGraph kernel as a pipeline of four stages.
+Pipeline stages are separated by a FIFO queues.
+In order to find out when the kernel finishes processing,
+every process counts all items it reads and writes.
+The kernel finishes when all of its processes
+are terminated successfully and all the FIFO queues are empty.
+
+Graphs get more sparse, CyGraph obtains higher speedups
+and comes quite close to its peak performance.
+
+\subsection{FPGA-CPU BFS Case}
+~\cite{DBLP:conf/fpl/UmurogluMJ15}
+
+\subsection{FPGA-HMC BFS Case}
+~\cite{DBLP:conf/fpga/ZhangKL17}~\cite{DBLP:conf/fpga/ZhangL18}~\cite{DBLP:conf/fpga/KhoramZSL18}
+
 \clearpage
 
 \section{ASIC}
@@ -1237,6 +1287,12 @@ Graphicionado~\cite{DBLP:conf/micro/HamWSSM16}
   对很多图算法, 绝大部分指令主要用于供给数据和移动数据, 其能效差.
 \end{compactitem}
 其建立了片上存储用于存储顶点信息, 同时降低访存粒度, 设计硬件专用流水线进行图计算.
+
+\subsection{GraphR}
+GraphR~\cite{DBLP:conf/hpca/SongZQLC18}
+
+\subsection{GraphP}
+GraphP~\cite{DBLP:conf/hpca/ZhangZWGWCKQ18}
 
 \clearpage
 
