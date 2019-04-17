@@ -290,6 +290,11 @@ For bits of $R[i]$ (described in algorithm~\ref{alg:enhanced_csr}):
     \EndFor
   \end{algorithmic}
 \end{algorithm}
+
+The edge-centric BFS requires several passes over the edges,
+with each pass only processing those edges that are currently in the frontier.
+This takes $O(Dm)$ time, a factor of $D$ more than when using the traditional BFS variant
+with $O(m)$ time ~\cite{DBLP:conf/hpdc/BestaPGSH17}.
 \subsubsection{Algebraic Abstraction for BFS}
 Graph algorithms are expressed with basic linear algebra structures
 and operations such as a series of matrix-vector (MV) or matrix-matrix (MM) products
@@ -305,7 +310,7 @@ Vertex-centric paradigm has expressive potentials
 to easily represent various kinds of graph algorithms,
 and the high parallelism in the grain of vertex.
 However, in the vertex-centric paradigm,
-there can be random accesses to edges,
+there can be \textit{random accesses to edges},
 resulting in potentially heavy memory access overhead.
 
 Vertex programs only depend on data local to a vertex
