@@ -1230,6 +1230,13 @@ targets to BFS algorithm:
   cuts down the number of external memory requests by least 50\%.
 \end{compactitem}
 
+The main idea by CyGraph is to use a \textit{custom graph representation}
+to reduce the memory bandwidth usage in their BFS design.
+In another optimization, instead of pushing vertex to the frontier queue,
+CyGraph propose to push the value row since only this value is needed in the subsequent iterationk.
+All these optimizations improve \textit{spatial locality}
+and \textit{reduce the amount of data} that has to be read from DRAM.
+
 For each CSR row offset element, $R[i]$,
 use the least significant bit of the row index as a visited flag
 (0 as not vistied)
@@ -1254,10 +1261,29 @@ Graphs get more sparse, CyGraph obtains higher speedups
 and comes quite close to its peak performance.
 
 \subsection{FPGA-CPU BFS Case}
-~\cite{DBLP:conf/fpl/UmurogluMJ15}
+Author~\cite{DBLP:conf/fpl/UmurogluMJ15}
+use algebra abstraction for BFS algorithm,
+and split distance calculation to a separate stage.
 
 \subsection{FPGA-HMC BFS Case}
-~\cite{DBLP:conf/fpga/ZhangKL17}~\cite{DBLP:conf/fpga/ZhangL18}~\cite{DBLP:conf/fpga/KhoramZSL18}
+HMC~\cite{DBLP:conf/fpga/ZhangKL17}
+allows to select the size of the transferred data payload
+to be anything between 16 bytes and 128 bytes.
+Reading a list of neighbors in a BFS traversal has better data locality
+than updating the parent of a single vertex.
+Thus, the main insight is that \textit{different payload sizes}
+for accessing different data structures in BFS can be used to optimize performance.
+
+Second small bitmap (an \textit{OR} reduction of k entries in the larger bitmap)
+is use for smaller frontiers in early and last iteration.
+The authors implement BFS in a framework based on the MapReduce paradigm.
+Mapper modules read the current frontier of the BFS and extract the adjacency lists of those vertices.
+Reducer modules then update the parents of the newly visited vertices and store them in the new frontier.
+The frontiers are stored as bitmaps in the main memory.
+
+The used HMC module had a limited capacity of 4GB, limiting the size of used graphs.
+
+~\cite{DBLP:conf/fpga/ZhangL18}~\cite{DBLP:conf/fpga/KhoramZSL18}
 
 \clearpage
 
@@ -1451,6 +1477,18 @@ load imbalance and global memory access overhead.
   \item greedy-search.
   \item A*.
 \end{compactitem}
+
+\subsection{Arbitrator} % (fold)
+\label{sub:arbitrator}
+Sort the edges by destination vertices, find minimal value easily in the sorting block,
+thus reducing the number of updates that have to be written to DRAM.
+
+Data forwarding scheme:
+forward result of memory write stage to memory read stage,
+invalid memory read when encounting same destination.
+% subsection Arbitrator (end)
+
+\clearpage
 
 \section{Graph Survey Template}
 \begin{compactitem}
