@@ -268,7 +268,15 @@ and collects the next-level set $Q_n$.
 In the next iteration, $Q_c$ is populated with values from $Q_n$,
 and $Q_n$ is cleared for the new level.
 
-\subsection{Enhanced CSR Format}
+\subsubsection{Two Way Optimization}
+Beamer~\cite{DBLP:conf/sc/BeamerAP12} propose a hybrid approach
+that is advantageous for low-diameter graphs,
+which combines a conventional top-down algorithm
+along with a novel bottom-up algorithm.
+The bottom-up algorithm can dramatically reduce the number of edges examined,
+which in turn accelerates the search as a whole.
+
+\subsubsection{Enhanced CSR Format}
 $C[i]$ represents destination of i-nth outgoing edge.
 For bits of $R[i]$ (described in algorithm~\ref{alg:enhanced_csr}):
 \begin{compactitem}
@@ -1150,14 +1158,45 @@ without requiring as many individual RAM blocks to be combined.
 \subsection{GraphStep}
 GraphStep~\cite{DBLP:conf/fccm/DeLorimierKMRERUKD06}
 is one of the first approaches to design a generic FPGA architecture.
+It based on \textit{vertex-centric} model.
+The computation associated with each vertex is divided into several steps,
+these steps are \textit{synchronized} across all the vertices.
+
+Each receives input messages from neighbors,
+then awaits the synchronization barrier,
+thirdly updates its state,
+finally sends messages to neighbors.
+
+High-degree vertices are decomposed into
+multiple vertices with smaller degrees to avoid bottlenecks.
+For larger graphs that do not fit the on-chip memory (BRAM),
+GraphStep distributes the data among multiple FPGAs with Butterfly routing networks.
+The problem with GraphStep is that it keeps the entire graph inside the on-board DRAM
+that limits the scalability of the system remarkably.
 
 \subsection{GraphGen}
 GraphGen~\cite{DBLP:conf/fccm/NurvitadhiWWHNH14}
 is a generic vertex-centric FPGA-based graph processing framework.
 It has been designed to get vertex-centric specifications
 and create FPGA implementations for targeted platforms.
-The problem with GraphGen is that it keeps the entire graph
-inside the on-board DRAM that limits the scalability of the system remarkably
+The main focus is on enabling developers to program graph applications
+on hardware accelerators without requiring any knowledge about the specific platform
+(Graph~\textbf{Gen} - Graph Generator).
+
+GraphGen allows to store graph data in DRAM,
+thus enabling the processing of much larger graphs that would otherwise not fit in BRAM.
+The compiler generates an FPGA program for each subgraph,
+The compilation procedure is thus dependent
+on both the graph algorithm and the graph data
+(need to re-compilation for changed data set or algorithm).
+
+The framework applies several additional optimizations to reduce the bandwidth usage:
+\begin{compactitem}
+  \item double buffering is used to prevent stalls while waiting for new data.
+  \item edges are sorted according to the order in which they are accessed
+  (memory access requests can be coalesced).
+  \item pipelining is used in the processing elements to achieve high clock rates.
+\end{compactitem}
 
 \subsection{GraphOps}
 GraphOps~\cite{DBLP:conf/fpga/OguntebiO16}
@@ -1169,6 +1208,10 @@ GraVF~\cite{DBLP:conf/fpl/EngelhardtS16}
 ~\cite{DBLP:conf/fccm/ZhouCP16}
 
 \subsection{FPGP}
+FPGP~\cite{DBLP:conf/fpga/DaiCWY16} is a framework
+that uses \textit{intervals and shards} to improve locality of processed graphs
+and store only the \textit{currently relevant} graph partitions in BRAM.
+
 In FPGP~\cite{DBLP:conf/fpga/DaiCWY16},
 there is a Shared-Vertex Memory (SVM) connected to all FPGAs.
 Such implementation limits the scalability to multi-FPGA
