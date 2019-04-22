@@ -601,6 +601,8 @@ use push mode when few active vertices while use pull mode when many active vert
   and reduce message passing among different processing units.
   \item synchronous batch messaging.
   \item coalescing multiple into single one.
+  Sort the edges by destination vertex,
+  reduce unnecessary updates (writes) with FIFOs to these consecutive vertices.
   \item use of batching when inserting and removing
   from the inter-socket communication channel to amortize the locking overhead.
   \item cut off NUMA communication.
@@ -619,6 +621,8 @@ use push mode when few active vertices while use pull mode when many active vert
   \item locality-aware vertices buffer.
   \item reshape cache hierachy.
   \item software prefetching (not very effect).
+  \item data redundancy for sequential accesses.
+  Store replicated values of source vertices in CSC array for pull model.
 \end{compactitem}
 \subsubsection{Parallelism}
 \begin{compactitem}
@@ -1181,7 +1185,7 @@ It has been designed to get vertex-centric specifications
 and create FPGA implementations for targeted platforms.
 The main focus is on enabling developers to program graph applications
 on hardware accelerators without requiring any knowledge about the specific platform
-(Graph~\textbf{Gen} - Graph Generator).
+(Graph\textbf{Gen} - Graph Generator).
 
 GraphGen allows to store graph data in DRAM,
 thus enabling the processing of much larger graphs that would otherwise not fit in BRAM.
@@ -1200,17 +1204,86 @@ The framework applies several additional optimizations to reduce the bandwidth u
 
 \subsection{GraphOps}
 GraphOps~\cite{DBLP:conf/fpga/OguntebiO16}
+is a \textit{vertex-centric} \textit{pull-based} graph processing framework.
+which provide a set of building blocks from which graph algorithms can be composed.
+These blocks are then placed on the FPGA and connected together,
+such as
+ForAllPropRdr
+(fetches the vertex properties of all the neighbors of a vertex from memory to the FPGA),
+NbrPropRed
+(performs a customized reduction on the vertex properties of a neighborhood),
+ElemUpdate
+(writes the updated value of a vertex back to memory)
+and control-flow blocks
+to implement PageRank and other algorithms.
+
+The authors implement a range of different graph algorithms
+to illustrate the flexibility of GraphOps.
+Instead of storing the properties of vertices as an array of size $n$,
+the property values are replicated for every single incoming edge
+to read source value sequentially in pull manner.
+In their evaluation, they conclude that the bottleneck for all implementations
+is the memory bandwidth between FPGA and DRAM.
+The authors conclude that performance of GraphOps
+corresponds to only $1/6$ of the theoretically available throughput.
+
+First, GraphOps does not describe how to implement multiple parallel pipelines.
+Second, data that is fetched from memory is only used to update a single vertex,
+but never reused among multiple vertices (Such reuse optimization could potentially
+lower the communication costs and thus improve the performance).
+Third, multiple blocks can issue memory read or write requests simultaneously,
+the memory channel needs to serve different memory interfaces.
+Neighborhoods are not accessed in the order in which they are stored in memory,
+leads to a large number of random memory requests which \textbf{place an even harder burden on the memory bandwidth}.
 
 \subsection{GraVF}
-GraVF~\cite{DBLP:conf/fpl/EngelhardtS16}
+GraVF~\cite{DBLP:conf/fpl/EngelhardtS16} is based on the BSP model (\textit{vertex-centeric}).
+In each superstep,
+the Apply function defines how a vertex property is updated based on the incoming messages
+and the Scatter function defines which messages are sent to the vertex neighbors.
+The synchronization step is implemented with floating barrier scheme
+(see also \S~\ref{ssub:floating barrier scheme}).
+All vertices and edges are stored on the FPGA,
+limiting the size of graphs that can be processed by the framework.
 
 \subsection{Energy Efficient Processing}
-~\cite{DBLP:conf/fccm/ZhouCP16}
+Zhou~\cite{DBLP:conf/fccm/ZhouCP16} based on X-Stream~\cite{DBLP:conf/sosp/RoyMZ13},
+proposed a \textit{edge-centric} graph processing framework,
+with \textit{Scatter-Gather} model:
+\begin{compactitem}
+  \item the authors propose to sort the edges inside each partition by their destination vertex.
+  Thus, updates to the same row in DRAM happen consecutively.
+  Since now updates that target the same destination vertex are processed consecutively,
+  unnecessary updates can be reduced on the FPGA before being stored to DRAM.
+  \item the authors implement a combining network which reduces concurrently processed updates
+  in case they have the same destination.
+  \item they implement a hybrid approach that \textit{dynamically switches}
+  between push and pull paradigms based on the number of vertices in the frontier.
+  \item to lower power consumption, the authors temporarily deactivate BRAM modules
+  through the \textit{enable} port when they are not needed.
+\end{compactitem}
 
 \subsection{FPGP}
-FPGP~\cite{DBLP:conf/fpga/DaiCWY16} is a framework
+FPGP~\cite{DBLP:conf/fpga/DaiCWY16} is a \textit{edge-centeric} framework
 that uses \textit{intervals and shards} to improve locality of processed graphs
 and store only the \textit{currently relevant} graph partitions in BRAM.
+A shard is further divided into sub-shards, based on the source vertex of the edges.
+Edges inside each sub-shard are then sorted by their destination vertex
+(resembles GraphChi~\cite{DBLP:conf/osdi/KyrolaBG12}).
+While the edges are streamed from memory shard by shard,
+the vertices are computed interval by interval.
+
+The FPGP framework enables the user to express different graph algorithms
+by only implementing \textit{the kernel function},
+which is executed for \textit{each edge} by dedicated processing units.
+For every sub-shard $S_{i,j}$,
+the properties of the vertices in interval $i$ are loaded to the FPGA
+and the kernel function is performed for every edge in the sub-shard.
+After the whole shard is processed,
+the updated interval $I_j$ is stored back to the shared memory
+and the next interval is loaded to BRAM.
+The entire source property array is being loaded $\frac{n}{M_{BRAM}}$ times,
+the total communication cost for reading vertex properties is in $O(n^2)$.
 
 In FPGP~\cite{DBLP:conf/fpga/DaiCWY16},
 there is a Shared-Vertex Memory (SVM) connected to all FPGAs.
@@ -1219,18 +1292,6 @@ because the total bandwidth of SVM is limited.
 Although it has been shown that FPGP
 does not perform as good as CPU-based single server frameworks,
 it shows the mechanism of FPGA-based generic graph processing systems well.
-
-\subsection{ExtraV}
-Graph Virtualization is a technique proposed by ExtraV~\cite{DBLP:journals/pvldb/LeeKYCHNNJ17}.
-Use the accelerator to offload tasks related with
-graph decompression and filtering from the host processor.
-
-\subsection{Hardware transactional Memory}
-An architecture that consists of many lightweight multi-threaded processing engines,
-a global transactional shared memory, and a work scheduler~\cite{DBLP:conf/fpga/MaZC17}.
-
-\subsection{Dataflow Accelerator}
-Dataflow accelerator~\cite{DBLP:conf/icdcs/JinYLZL17}~\cite{DBLP:conf/IEEEpact/Yao0L0H18}
 
 \subsection{ForeGraph}
 ForeGraph~\cite{DBLP:conf/fpga/DaiHCXWY17}
@@ -1247,6 +1308,18 @@ data layout into distributed FPGA boards:
   load fewer edges from the off-chip memory and
   skip (sub-) blocks which are unnecessary to be transmitted.
 \end{compactitem}
+
+\subsection{ExtraV}
+Graph Virtualization is a technique proposed by ExtraV~\cite{DBLP:journals/pvldb/LeeKYCHNNJ17}.
+Use the accelerator to offload tasks related with
+graph decompression and filtering from the host processor.
+
+\subsection{Hardware transactional Memory}
+An architecture that consists of many lightweight multi-threaded processing engines,
+a global transactional shared memory, and a work scheduler~\cite{DBLP:conf/fpga/MaZC17}.
+
+\subsection{Dataflow Accelerator}
+Dataflow accelerator~\cite{DBLP:conf/icdcs/JinYLZL17}~\cite{DBLP:conf/IEEEpact/Yao0L0H18}
 
 \subsection{FabGraph}
 FabGraph~\cite{DBLP:conf/fpga/ShaoLHL019}
@@ -1360,6 +1433,9 @@ Graphicionado~\cite{DBLP:conf/micro/HamWSSM16}
   对很多图算法, 绝大部分指令主要用于供给数据和移动数据, 其能效差.
 \end{compactitem}
 其建立了片上存储用于存储顶点信息, 同时降低访存粒度, 设计硬件专用流水线进行图计算.
+
+\subsection{GraphPIM}
+GraphPIM~\cite{DBLP:conf/hpca/NaiHSKKK17}
 
 \subsection{GraphR}
 GraphR~\cite{DBLP:conf/hpca/SongZQLC18}
@@ -1524,33 +1600,32 @@ load imbalance and global memory access overhead.
 
 \subsection{Arbitrator} % (fold)
 \label{sub:arbitrator}
+\subsubsection{Sorting Scheme}
 Sort the edges by destination vertices, find minimal value easily in the sorting block,
 thus reducing the number of updates that have to be written to DRAM.
-
-Data forwarding scheme:
+\subsubsection{Data Forwarding Scheme}
 forward result of memory write stage to memory read stage,
 invalid memory read when encounting same destination.
+\subsubsection{Floating Barrier Scheme}
+\label{ssub:floating barrier scheme}
+Each processing element sends a barrier marker to
+all PEs when it finishes a superstep.
+The arbiter (Arbiter -> Apply Kernel -> Update Queue -> Scatter Kernel)
+at the receiving end needs to
+let pass only messages destined for the current superstep,
+and block messages for the next superstep until it \textbf{receives barrier markers from all PEs}.
+The arbiter will then withdraw all barrier markers for the current superstep simultaneously
+and signal the barrier to the apply component.
+
+The floating barrier is also used to detect termination:
+each PE tracks the last two messages it received.
+If both are barrier messages, no vertices were active on this PE in the last superstep.
+While this condition holds, the PE signals inactivity.
+If all PEs signal inactivity simultaneously,
+no messages at all were sent in the previous superstep,
+and the system is halted.
 % subsection Arbitrator (end)
 
-\clearpage
-
-\section{Graph Survey Template}
-\begin{compactitem}
-  \item data presentation/layout.
-  \item data ordering: index-aware/degree-aware/conflict-aware.
-  \item data partition: source-oriented/destination-oriented.
-  \item data manipulation.
-  \item open source.
-  \item programming model.
-  \item partioning.
-  \item static and dynamic graphs.
-  \item batch and streaming.
-  \item algorithms.
-  \item community activity.
-  \item users.
-  \item books.
-  \item distinction points.
-\end{compactitem}
 \clearpage
 
 \bibliographystyle{unsrt}
