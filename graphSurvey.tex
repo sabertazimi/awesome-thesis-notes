@@ -1246,23 +1246,6 @@ The synchronization step is implemented with floating barrier scheme
 All vertices and edges are stored on the FPGA,
 limiting the size of graphs that can be processed by the framework.
 
-\subsection{Energy Efficient Processing}
-Zhou~\cite{DBLP:conf/fccm/ZhouCP16} based on X-Stream~\cite{DBLP:conf/sosp/RoyMZ13},
-proposed a \textit{edge-centric} graph processing framework,
-with \textit{Scatter-Gather} model:
-\begin{compactitem}
-  \item the authors propose to sort the edges inside each partition by their destination vertex.
-  Thus, updates to the same row in DRAM happen consecutively.
-  Since now updates that target the same destination vertex are processed consecutively,
-  unnecessary updates can be reduced on the FPGA before being stored to DRAM.
-  \item the authors implement a combining network which reduces concurrently processed updates
-  in case they have the same destination.
-  \item they implement a hybrid approach that \textit{dynamically switches}
-  between push and pull paradigms based on the number of vertices in the frontier.
-  \item to lower power consumption, the authors temporarily deactivate BRAM modules
-  through the \textit{enable} port when they are not needed.
-\end{compactitem}
-
 \subsection{FPGP}
 FPGP~\cite{DBLP:conf/fpga/DaiCWY16} is a \textit{edge-centeric} framework
 that uses \textit{intervals and shards} to improve locality of processed graphs
@@ -1381,6 +1364,23 @@ and comes quite close to its peak performance.
 Author~\cite{DBLP:conf/fpl/UmurogluMJ15}
 use algebra abstraction for BFS algorithm,
 and split distance calculation to a separate stage.
+
+\subsection{Hybrid Push-Pull BFS Case}
+Zhou~\cite{DBLP:conf/fccm/ZhouCP16} based on X-Stream~\cite{DBLP:conf/sosp/RoyMZ13},
+proposed a \textit{edge-centric} graph processing framework,
+with \textit{Scatter-Gather} model:
+\begin{compactitem}
+  \item the authors propose to sort the edges inside each partition by their destination vertex.
+  Thus, updates to the same row in DRAM happen consecutively.
+  Since now updates that target the same destination vertex are processed consecutively,
+  unnecessary updates can be reduced on the FPGA before being stored to DRAM.
+  \item the authors implement a combining network which reduces concurrently processed updates
+  in case they have the same destination.
+  \item they implement a hybrid approach that \textit{dynamically switches}
+  between push and pull paradigms based on the number of vertices in the frontier~\cite{DBLP:conf/sbac-pad/ZhouP17}.
+  \item to lower power consumption, the authors temporarily deactivate BRAM modules
+  through the \textit{enable} port when they are not needed.
+\end{compactitem}
 
 \subsection{FPGA-HMC BFS Case}
 HMC~\cite{DBLP:conf/fpga/ZhangKL17}
@@ -1597,6 +1597,9 @@ load imbalance and global memory access overhead.
   \item greedy-search.
   \item A*.
 \end{compactitem}
+
+\subsection{Graph Representation}
+CSR + Interval + Shard (edge pointer in vertices array)~\cite{DBLP:conf/sbac-pad/ZhouP17}
 
 \subsection{Arbitrator} % (fold)
 \label{sub:arbitrator}
