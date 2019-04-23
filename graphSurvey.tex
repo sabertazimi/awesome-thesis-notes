@@ -1387,8 +1387,17 @@ with \textit{Scatter-Gather} model:
 \end{compactitem}
 
 \subsection{FPGA-HMC BFS Case}
-HMC~\cite{DBLP:conf/fpga/ZhangKL17}
-allows to select the size of the transferred data payload
+Benefits for graph processing on FPGA coming from HMCs are due to
+~\cite{DBLP:conf/fpga/ZhangKL17}
+~\cite{DBLP:conf/fpga/ZhangL18}
+~\cite{DBLP:conf/fpga/KhoramZSL18}:
+\begin{compactitem}
+  \item the HMC substantial bandwidth improvement over traditional DRAM.
+  \item optimized parallel random memory access.
+  \item in-memory locking and atomic operations.
+\end{compactitem}
+
+HMC allows to select the size of the transferred data payload
 to be anything between 16 bytes and 128 bytes.
 Reading a list of neighbors in a BFS traversal has better data locality
 than updating the parent of a single vertex.
@@ -1402,14 +1411,6 @@ Mapper modules read the current frontier of the BFS and extract the adjacency li
 Reducer modules then update the parents of the newly visited vertices and store them in the new frontier.
 The frontiers are stored as bitmaps in the main memory.
 The used HMC module had a limited capacity of 4GB, limiting the size of used graphs.
-
-Benefits for graph processing on FPGA coming from HMCs are due to
-~\cite{DBLP:conf/fpga/ZhangL18}~\cite{DBLP:conf/fpga/KhoramZSL18}:
-\begin{compactitem}
-  \item the HMC substantial bandwidth improvement over traditional DRAM.
-  \item optimized parallel random memory access.
-  \item in-memory locking and atomic operations.
-\end{compactitem}
 
 \clearpage
 
