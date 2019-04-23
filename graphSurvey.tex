@@ -267,7 +267,6 @@ sets their level as the current level
 and collects the next-level set $Q_n$.
 In the next iteration, $Q_c$ is populated with values from $Q_n$,
 and $Q_n$ is cleared for the new level.
-
 \subsubsection{Two Way Optimization}
 Beamer~\cite{DBLP:conf/sc/BeamerAP12} propose a hybrid approach
 that is advantageous for low-diameter graphs,
@@ -275,7 +274,6 @@ which combines a conventional top-down algorithm
 along with a novel bottom-up algorithm.
 The bottom-up algorithm can dramatically reduce the number of edges examined,
 which in turn accelerates the search as a whole.
-
 \subsubsection{Enhanced CSR Format}
 $C[i]$ represents destination of i-nth outgoing edge.
 For bits of $R[i]$ (described in algorithm~\ref{alg:enhanced_csr}):
@@ -301,7 +299,6 @@ For bits of $R[i]$ (described in algorithm~\ref{alg:enhanced_csr}):
     \EndFor
   \end{algorithmic}
 \end{algorithm}
-
 The edge-centric BFS requires several passes over the edges,
 with each pass only processing those edges that are currently in the frontier.
 This takes $O(Dm)$ time, a factor of $D$ more than when using the traditional BFS variant
@@ -312,6 +309,9 @@ and operations such as a series of matrix-vector (MV) or matrix-matrix (MM) prod
 over various semirings~\cite{DBLP:conf/fpl/UmurogluMJ15}.
 BFS based on MV uses no explicit locking or atomics
 and has a succinct description~\cite{DBLP:conf/ipps/BestaMSH17}.
+\subsubsection{Compressed Graph Representation}
+LogGraph~\cite{DBLP:conf/IEEEpact/BestaSZSHH18}
+achieves high compression ratios as well as performance.
 
 \subsection{Processing Model}
 \subsubsection{Vertex Centric Paradigm}
@@ -1144,12 +1144,6 @@ By exploiting massive parallelism, typically in the form of deep pipelines,
 arbitrarily complex computations can be implemented as a pipeline
 that can produce one result per cycle.
 
-Shortcoming:
-\begin{compactitem}
-  \item limited resources (BRAM, PLE).
-  \item limited frequency.
-\end{compactitem}
-
 \subsection{FPGA Architecture}
 Configurable logic blocks include lookup tables (LUTs) to implement combinatorial logic,
 flip-flops to implement registers, and a programmable interconnect.
@@ -1158,6 +1152,15 @@ Xilinx UltraScale+ devices add a new class of on-chip RAM called UltraRAM,
 that expose access ports of similar width to traditional block RAM,
 but have larger capacity, allowing large amounts of memory to be stored on the chip
 without requiring as many individual RAM blocks to be combined.
+\subsubsection{insufficient Bandwidth}
+\begin{compactitem}
+  \item irregular memory access pattern and random accesses to off-chip memory
+  \item memory-bound graph algorithms
+\end{compactitem}
+
+\subsubsection{Limited Resources}
+BRAM and PLE.
+\subsubsection{Limited Frequency}
 
 \subsection{GraphStep}
 GraphStep~\cite{DBLP:conf/fccm/DeLorimierKMRERUKD06}
@@ -1296,6 +1299,8 @@ data layout into distributed FPGA boards:
 Graph Virtualization is a technique proposed by ExtraV~\cite{DBLP:journals/pvldb/LeeKYCHNNJ17}.
 Use the accelerator to offload tasks related with
 graph decompression and filtering from the host processor.
+They achieve compression ratios between 1.9 and 9.36,
+where the highest compression rates are obtained for web graphs.
 
 \subsection{Hardware transactional Memory}
 An architecture that consists of many lightweight multi-threaded processing engines,
@@ -1397,10 +1402,15 @@ The authors implement BFS in a framework based on the MapReduce paradigm.
 Mapper modules read the current frontier of the BFS and extract the adjacency lists of those vertices.
 Reducer modules then update the parents of the newly visited vertices and store them in the new frontier.
 The frontiers are stored as bitmaps in the main memory.
-
 The used HMC module had a limited capacity of 4GB, limiting the size of used graphs.
 
-~\cite{DBLP:conf/fpga/ZhangL18}~\cite{DBLP:conf/fpga/KhoramZSL18}
+Benefits for graph processing on FPGA coming from HMCs are due to
+~\cite{DBLP:conf/fpga/ZhangL18}~\cite{DBLP:conf/fpga/KhoramZSL18}:
+\begin{compactitem}
+  \item the HMC substantial bandwidth improvement over traditional DRAM.
+  \item optimized parallel random memory access.
+  \item in-memory locking and atomic operations.
+\end{compactitem}
 
 \clearpage
 
