@@ -1397,20 +1397,31 @@ Benefits for graph processing on FPGA coming from HMCs are due to
   \item in-memory locking and atomic operations.
 \end{compactitem}
 
+The authors implement BFS in a framework based on the MapReduce paradigm.
+Mapper modules read the current frontier of the BFS and extract the adjacency lists of those vertices.
+Reducer modules then update the parents of the newly visited vertices and store them in the new frontier.
+The used HMC module had a limited capacity of 4GB, limiting the size of used graphs.
+
 HMC allows to select the size of the transferred data payload
 to be anything between 16 bytes and 128 bytes.
 Reading a list of neighbors in a BFS traversal has better data locality
 than updating the parent of a single vertex.
 Thus, the main insight is that \textit{different payload sizes}
 for accessing different data structures in BFS can be used to optimize performance.
+Best read performance for reading bitmap, vertex, and adjacency analysis
+is achieved when larger read granularity is used.
+Conversely, write operations favor smaller granularity of accesses.
+The only exception happens when reading the level array,
+since this read also has low locality,
 
+A two-level bitmap design is proposed to eliminate unnecessary HMC accesses
+by leveraging the sparsity of the graph,
+due to only a small part of bitmap contains useful information.
 Second small bitmap (an \textit{OR} reduction of k entries in the larger bitmap)
 is use for smaller frontiers in early and last iteration.
-The authors implement BFS in a framework based on the MapReduce paradigm.
-Mapper modules read the current frontier of the BFS and extract the adjacency lists of those vertices.
-Reducer modules then update the parents of the newly visited vertices and store them in the new frontier.
 The frontiers are stored as bitmaps in the main memory.
-The used HMC module had a limited capacity of 4GB, limiting the size of used graphs.
+To increase performance, the on-chip first level bitmap should
+represent the off-chip second level bitmap in a more fine-grained manner.
 
 \clearpage
 
