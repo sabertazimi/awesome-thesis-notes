@@ -1423,6 +1423,11 @@ The frontiers are stored as bitmaps in the main memory.
 To increase performance, the on-chip first level bitmap should
 represent the off-chip second level bitmap in a more fine-grained manner.
 
+To accelerate the development process and facilitate evaluation of optimization methods,
+the authors develop an event-based HMC simulator.
+They compile their CPU implementation using gcc with
+flags \textbf{-Ofast} and \textbf{-march=native} for runtime optimization.
+
 \clearpage
 
 \section{ASIC}
