@@ -362,7 +362,8 @@ and component connectivity details from users,
 a TLAV-based framework may face the problem of slow convergence 
 especially for large-diameter graphs.
 Subgraph-centric graph processing system
-exposes the partition’s structure to the users to allow optimizations.
+exposes the partition’s structure to the users to allow optimizations
+(pass subgraph information to user-defined function).
 So, the performance of the system depends on the partitioning strategy that is used
 and how effectively users exploit the access to the coarse components in their execution.
 On the other hand, communication within a partition is by \textit{direct memory access},
@@ -1439,6 +1440,15 @@ They compile their CPU implementation using gcc with
 flags \textbf{-Ofast} and \textbf{-march=native} for runtime optimization.
 \subsubsection{FPGA-HMC 2018 Case}
 The authors~\cite{DBLP:conf/fpga/ZhangL18}
+developed two algorithm optimization techniques:
+degree-aware adjacency list reordering and degree-aware vertex index sorting.
+The former can reduce the number of redundant edge checks in the bottom-up method,
+while the latter can create a strong correlation between vertex index and data access frequency.
+By leveraging the strong correlation between vertex index and data access frequency
+made by degree-aware vertex index sorting,
+they further developed two platform-dependent hardware optimization techniques,
+namely degree-aware data placement and degree-aware adjacency list compression.
+These two techniques reduce the amount of access to external memory.
 
 \clearpage
 
