@@ -277,6 +277,8 @@ Beamer~\cite{DBLP:conf/sc/BeamerAP12} propose a hybrid approach
 that is advantageous for low-diameter graphs,
 which combines a conventional top-down algorithm
 along with a novel bottom-up algorithm.
+In this method, instead of iterating through the frontier,
+it iterate through the unvisited vertices array when frontier size becomes large.
 The bottom-up algorithm can dramatically reduce the number of edges examined,
 which in turn accelerates the search as a whole.
 \subsubsection{Enhanced CSR Format}
