@@ -156,6 +156,11 @@ very different conclusions for algorithms and architectures.
 
 References from~\cite{DBLP:conf/iiswc/BeamerAP15}~\cite{DBLP:conf/usenix/MalicevicLZ17}.
 
+\subsection{Terminology}
+\begin{compactitem}
+  \item $\text{TEPS} = (\#\text{Edges} * \text{Average Diameter}) / (\#\text{Cycles} * T)$
+\end{compactitem}
+
 \subsection{Graph Shape}
 Graphs can be divided into two broad categories: meshes and social networks.
 Meshes (such as road maps or the finiteelement mesh of a simulated car body)
@@ -332,6 +337,8 @@ with manageable intermachine communication~\cite{DBLP:journals/csur/McCuneWM15}.
 In the vertex-centric model, a vertex is very short sighted:
 it only has information about its immediate neighbors,
 therefore information is propagated through graphs slowly,
+A TLAV-based framework may face the problem of slow convergence 
+especially for large-diameter graphs.
 \textit{one hop at a time}.
 As a result, it takes many computation steps
 to propagate a piece of information from a source to a destination,
@@ -352,6 +359,8 @@ The system would better utilize processing while retaining scalability
 
 In contrast to a vertex-centricmodel that hides partitioning
 and component connectivity details from users,
+a TLAV-based framework may face the problem of slow convergence 
+especially for large-diameter graphs.
 Subgraph-centric graph processing system
 exposes the partition’s structure to the users to allow optimizations.
 So, the performance of the system depends on the partitioning strategy that is used
@@ -361,6 +370,7 @@ which is faster than passing messages between each single vertex in a vertex-cen
 Vertices in the same partition can exchange their state
 and perform consequent computations to the extent possible \textit{in the same iteration}
 ~\cite{DBLP:journals/csur/HeidariSCB18}.
+Only one step is needed if these two vertices appear in the same graph partition.
 
 However, subgraph-centric programming algorithms are vulnerable
 to imbalances in the number of subgraphs per iteration
@@ -1324,7 +1334,6 @@ All vertex caches use BRAM.
 FabGraph use 2 pipeline sets to overlap
 communication and computation,
 enhancing bandwidth of graph progressing.
-
 \subsection{CyGraph}
 CyGraph~\cite{DBLP:conf/ipps/AttiaJTJZ14}
 targets to BFS algorithm:
@@ -1396,8 +1405,9 @@ Benefits for graph processing on FPGA coming from HMCs are due to
   \item optimized parallel random memory access.
   \item in-memory locking and atomic operations.
 \end{compactitem}
-
-The authors implement BFS in a framework based on the MapReduce paradigm.
+\subsubsection{FPGA-HMC 2017 Case}
+The authors~\cite{DBLP:conf/fpga/ZhangKL17}
+implement BFS in a framework based on the MapReduce paradigm.
 Mapper modules read the current frontier of the BFS and extract the adjacency lists of those vertices.
 Reducer modules then update the parents of the newly visited vertices and store them in the new frontier.
 The used HMC module had a limited capacity of 4GB, limiting the size of used graphs.
@@ -1427,6 +1437,8 @@ To accelerate the development process and facilitate evaluation of optimization 
 the authors develop an event-based HMC simulator.
 They compile their CPU implementation using gcc with
 flags \textbf{-Ofast} and \textbf{-march=native} for runtime optimization.
+\subsubsection{FPGA-HMC 2018 Case}
+The authors~\cite{DBLP:conf/fpga/ZhangL18}
 
 \clearpage
 
