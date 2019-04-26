@@ -1669,6 +1669,56 @@ Hardware processors included single-sockets and multi-sockets.
 Synchronization layers included cache coherence (load and store),
 atomic operations (CAS), software primitives (locks)
 and systems/applications (hash table).
+It showed some useful conclusions:
+\begin{compactitem}
+  \item scalability of synchronization is key to application scalability.
+  \item synchronization crossing sockets is a performance killer.
+  \item sharing within a socket is necessary but not sufficient
+  due to hardware provide you with the expect expensive in any case.
+  \item uniformity is expected to scale better
+  \item atomic operations (CAS) is more expensive than loads and stores (cache) on the same socket,
+  but loads and stores can be as expensive as atomic operations multi-sockets.
+  It showed that loads and stores \textbf{scale up worser than} atomic operations.
+  \item simple locks are powerful (test-and-set, ticket lock)
+\end{compactitem}
+
+\subsubsection{Locks}
+等待获取锁的方式有 ``被动'' 和 ``主动'' 两种.
+被动模式指的是互相竞争的线程不再关心锁是否已经被释放,
+而是让自身进入阻塞状态,
+等待某种调度机制在锁释放时唤醒其中某个线程;
+主动模式通常使用自旋的方式实现,
+线程进入某种循环主动判断锁的状态并尝试获得锁,
+一旦某个线程获得了锁会立即退出循环.
+尽管自旋浪费了计算资源, 但是在锁资源很快就可以被释放的前提下,
+自旋锁的开销要低于线程的阻塞和唤起导致的系统开销.
+\paragraph{TAS/TSL}
+test-and-set-lock 是一种原子操作, 利用 TSL 指令来可以实现自旋锁.
+当旧值为 0 时, 这程序可以得到锁.
+否则的话, 它会一直尝试将 1 写入存储器位置, 直到旧值为 0.
+\paragraph{CAS}
+compare-and-swap 是一种原子操作,
+通常会记录下某块内存中的旧值, 通过对旧值进行一系列的操作后得到新值,
+然后通过 CAS 操作将新值与旧值进行交换.
+如果这块内存的值在这期间内没被修改过, 则旧值会与内存中的数据相同,
+这时 CAS 操作将会成功执行, 使内存中的数据变为新值.
+如果内存中的值在这期间内被修改过, 则一般来说旧值会与内存中的数据不同,
+这时CAS操作将会失败, 新值将不会被写入内存.
+CAS 可以用于实现无锁数据结构, 常见的有无锁队列 (先入先出) 以及无锁堆 (先入后出).
+\paragraph{Spin Lock}
+自旋锁是计算机科学用于多线程同步的一种锁, 线程反复检查锁变量是否可用.
+由于线程在这一过程中保持执行, 因此是一种忙等待.
+一旦获取了自旋锁, 线程会一直保持该锁, 直至显式释放自旋锁.
+\paragraph{Ticket Lock}
+排号自旋锁类似于自旋锁, 但每一个申请排队自旋锁的线程获得一个排队号 (ticket).
+至多一个线程拥有自旋锁, 当它释放锁时, 把自身的 ticket 加 1 作为下一个可获得锁的 ticket,
+持有该 ticket 的线程在自旋检查时就可发现已经获得了自旋锁.
+这种机制类似于一些提供社会服务的场所 (如银行):
+进门的顾客从排号机获取一个等待号, 然后不断检查当前可服务的号, 直至轮到其手持的号.
+\paragraph{CLH Lock}
+CLH (Craig, Landin, and Hagersten lock) 是一个自旋锁, 能确保无饥饿性, 提供先来先服务的公平性.
+CLH 锁也是一种基于链表的可扩展, 高性能, 公平的自旋锁,
+申请线程只在本地变量上自旋, 它不断轮询前驱的状态, 如果发现前驱释放了锁就结束自旋.
 
 \subsection{Arbitrator} % (fold)
 \label{sub:arbitrator}
