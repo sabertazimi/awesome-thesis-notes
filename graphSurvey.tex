@@ -1719,10 +1719,16 @@ compare-and-swap 是一种原子操作,
 如果内存中的值在这期间内被修改过, 则一般来说旧值会与内存中的数据不同,
 这时CAS操作将会失败, 新值将不会被写入内存.
 CAS 可以用于实现无锁数据结构, 常见的有无锁队列 (先入先出) 以及无锁堆 (先入后出).
+\paragraph{FAA/FAI}
+fetch-and-add/fetch-and-increment 对内存位置执行增加一个数量的原子操作.
+具体内容为: 令$x$变为$x+a$, 其中$x$是内存位置, $a$是值, 可用于实现互斥锁与信号量.
 \paragraph{Spin Lock}
 自旋锁是计算机科学用于多线程同步的一种锁, 线程反复检查锁变量是否可用.
 由于线程在这一过程中保持执行, 因此是一种忙等待.
 一旦获取了自旋锁, 线程会一直保持该锁, 直至显式释放自旋锁.
+
+Spin locks are generally considered to scale poorly
+because they involve high contention on a single cache line.
 \paragraph{Ticket Lock}
 排号自旋锁类似于自旋锁, 但每一个申请排队自旋锁的线程获得一个排队号 (ticket).
 至多一个线程拥有自旋锁, 当它释放锁时, 把自身的 ticket 加 1 作为下一个可获得锁的 ticket,
