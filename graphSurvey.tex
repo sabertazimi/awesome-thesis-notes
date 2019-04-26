@@ -1442,14 +1442,19 @@ They compile their CPU implementation using gcc with
 flags \textbf{-Ofast} and \textbf{-march=native} for runtime optimization.
 \subsubsection{FPGA-HMC 2018 Case}
 The authors~\cite{DBLP:conf/fpga/ZhangL18}
-developed two algorithm optimization techniques:
+developed two algorithm optimization techniques
+for \textit{hybrid top-down and bottom-up} BFS two way algorithm~\cite{DBLP:conf/sc/BeamerAP12}:
 degree-aware adjacency list reordering and degree-aware vertex index sorting.
 The former can reduce the number of redundant edge checks in the bottom-up method,
 while the latter can create a strong correlation between vertex index and data access frequency.
+
 By leveraging the strong correlation between vertex index and data access frequency
 made by degree-aware vertex index sorting,
 they further developed two platform-dependent hardware optimization techniques,
 namely degree-aware data placement and degree-aware adjacency list compression.
+Store the vertices with the highest degree in the register file,
+2049 to 65536 in BRAM, the rest in external HMC.
+Exponential-Golomb coding is applied to compress the adjacency list.
 These two techniques reduce the amount of access to external memory.
 
 \clearpage
