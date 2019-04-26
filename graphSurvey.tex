@@ -1661,9 +1661,9 @@ load imbalance and global memory access overhead.
 
 
 \subsection{Synchronization}
-EverythingSync~\cite{DBLP:conf/sosp/DavidGT13} claimed that
+SSYNC~\cite{DBLP:conf/sosp/DavidGT13} claimed that
 ``good synchronization'' in software might \textbf{not scale as expected} due to hardware.
-EverythingSync provided a comprehensive analysis on two dimension:
+SSYNC provided a comprehensive analysis on two dimension:
 hardware processors and synchronization layers.
 Hardware processors included single-sockets and multi-sockets.
 Synchronization layers included cache coherence (load and store),
@@ -1679,7 +1679,21 @@ It showed some useful conclusions:
   \item atomic operations (CAS) is more expensive than loads and stores (cache) on the same socket,
   but loads and stores can be as expensive as atomic operations multi-sockets.
   It showed that loads and stores \textbf{scale up worser than} atomic operations.
-  \item simple locks are powerful (test-and-set, ticket lock)
+  \item simple locks are powerful (test-and-set, ticket lock).
+  An efficient implementation of a ticket lock is the best performing synchronization scheme
+  in most low contention workloads and some higher contention workloads.
+  \item use of message passing for optimizing certain \textbf{highly contended} parts of a system.
+\end{compactitem}
+\subsubsection{MESI}
+MESI supports the following states for a cache line:
+\begin{compactitem}
+  \item Modified: the data are stale in the memory
+  and no other cache has a copy of this line;
+  \item Exclusive: the data are up-to-date in the memory
+  and no other cache has a copy of this line;
+  \item Shared: the data are up-to-date in the memory
+  and other caches might have copies of the line;
+  \item Invalid: the data are invalid.
 \end{compactitem}
 
 \subsubsection{Locks}
@@ -1715,10 +1729,17 @@ CAS 可以用于实现无锁数据结构, 常见的有无锁队列 (先入先出
 持有该 ticket 的线程在自旋检查时就可发现已经获得了自旋锁.
 这种机制类似于一些提供社会服务的场所 (如银行):
 进门的顾客从排号机获取一个等待号, 然后不断检查当前可服务的号, 直至轮到其手持的号.
+
+Ticket Lock 虽然解决了公平性的问题, 但是多处理器系统上,
+每个进程/线程占用的处理器都在读写同一个变量 serviceNum,
+每次读写操作都必须在多个处理器缓存之间进行缓存同步
+这会导致繁重的系统总线和内存的流量, 大大降低系统整体的性能.
 \paragraph{CLH Lock}
 CLH (Craig, Landin, and Hagersten lock) 是一个自旋锁, 能确保无饥饿性, 提供先来先服务的公平性.
 CLH 锁也是一种基于链表的可扩展, 高性能, 公平的自旋锁,
 申请线程只在本地变量上自旋, 它不断轮询前驱的状态, 如果发现前驱释放了锁就结束自旋.
+相比于 Ticket Lock, 申请线程只在本地变量上自旋,
+从而极大地减少了不必要的处理器缓存同步的次数, 降低了总线和内存的开销.
 
 \subsection{Arbitrator} % (fold)
 \label{sub:arbitrator}
