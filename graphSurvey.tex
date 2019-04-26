@@ -1660,6 +1660,16 @@ load imbalance and global memory access overhead.
 \end{compactitem}
 
 
+\subsection{Synchronization}
+EverythingSync~\cite{DBLP:conf/sosp/DavidGT13} claimed that
+``good synchronization'' in software might \textbf{not scale as expected} due to hardware.
+EverythingSync provided a comprehensive analysis on two dimension:
+hardware processors and synchronization layers.
+Hardware processors included single-sockets and multi-sockets.
+Synchronization layers included cache coherence (load and store),
+atomic operations (CAS), software primitives (locks)
+and systems/applications (hash table).
+
 \subsection{Arbitrator} % (fold)
 \label{sub:arbitrator}
 \subsubsection{Sorting Scheme}
