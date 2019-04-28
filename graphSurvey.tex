@@ -1677,7 +1677,9 @@ It showed some useful conclusions:
   due to hardware provide you with the expect expensive in any case.
   Incomplete directory based AMD Opteron causes low localtiy
   leading to inefficient intra-socket synchronization.
-  \item uniformity is expected to scale better
+  \item uniformity is expected to scale better.
+  \item Under high contention, single-sockets prevent performance collapse,
+  whereas in the lower contention cases these platforms scale well.
   \item atomic operations (CAS) is more expensive than loads and stores (cache) on the same socket,
   but loads and stores can be as expensive as atomic operations multi-sockets.
   It showed that loads and stores \textbf{scale up worser than} atomic operations.
