@@ -1731,7 +1731,7 @@ fetch-and-add/fetch-and-increment 对内存位置执行增加一个数量的原�
 
 Spin locks are generally considered to scale poorly
 because they involve high contention on a single cache line.
-\paragraph{Queue Lock}
+\paragraph{Ticket Lock}
 Ticket Lock 排号自旋锁类似于自旋锁, 但每一个申请排队自旋锁的线程获得一个排队号 (ticket).
 至多一个线程拥有自旋锁, 当它释放锁时, 把自身的 ticket 加 1 作为下一个可获得锁的 ticket,
 持有该 ticket 的线程在自旋检查时就可发现已经获得了自旋锁.
@@ -1742,7 +1742,7 @@ Ticket Lock 虽然解决了公平性的问题, 但是多处理器系统上,
 每个进程/线程占用的处理器都在读写同一个变量 serviceNum,
 每次读写操作都必须在多个处理器缓存之间进行缓存同步
 这会导致繁重的系统总线和内存的流量, 大大降低系统整体的性能.
-\paragraph{Hierarchical Lock}
+\paragraph{CLH Lock}
 CLH (Craig, Landin, and Hagersten lock) 是一个自旋锁, 能确保无饥饿性, 提供先来先服务的公平性.
 CLH 锁也是一种基于链表的可扩展, 高性能, 公平的自旋锁,
 申请线程只在本地变量上自旋, 它不断轮询前驱的状态, 如果发现前驱释放了锁就结束自旋.
