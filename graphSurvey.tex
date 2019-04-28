@@ -1682,6 +1682,8 @@ It showed some useful conclusions:
   but loads and stores can be as expensive as atomic operations multi-sockets.
   It showed that loads and stores \textbf{scale up worser than} atomic operations.
   \item simple locks are powerful (test-and-set, ticket lock).
+  While complex locks are generally the best under extreme contention,
+  simple locks perform better under low contention.
   An efficient implementation of a ticket lock is the best performing synchronization scheme
   in most low contention workloads and some higher contention workloads.
   \item use of message passing for optimizing certain \textbf{highly contended} parts of a system.
