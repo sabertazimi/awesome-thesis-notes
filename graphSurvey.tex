@@ -1675,6 +1675,8 @@ It showed some useful conclusions:
   \item synchronization crossing sockets is a performance killer.
   \item sharing within a socket is necessary but not sufficient
   due to hardware provide you with the expect expensive in any case.
+  Incomplete directory based AMD Opteron causes low localtiy
+  leading to inefficient intra-socket synchronization.
   \item uniformity is expected to scale better
   \item atomic operations (CAS) is more expensive than loads and stores (cache) on the same socket,
   but loads and stores can be as expensive as atomic operations multi-sockets.
@@ -1742,6 +1744,25 @@ Ticket Lock 虽然解决了公平性的问题, 但是多处理器系统上,
 每个进程/线程占用的处理器都在读写同一个变量 serviceNum,
 每次读写操作都必须在多个处理器缓存之间进行缓存同步
 这会导致繁重的系统总线和内存的流量, 大大降低系统整体的性能.
+\begin{lstlisting}
+ALWAYS_INLINE void ProportionalBackOffTicketSpinLock::Enter()
+{
+  const auto myTicketNo = NextTicketNo.fetch_add(1, std::memory_order_relaxed);
+ 
+  while (true)
+  {
+    const auto servingTicketNo = ServingTicketNo.load(std::memory_order_acquire);
+    if (servingTicketNo == myTicketNo)
+      break;
+ 
+    const size_t numBeforeMe = myTicketNo-servingTicketNo;
+    const size_t waitIters = BACKOFF_BASE*numBeforeMe;
+ 
+    for (size_t i=0; i<waitIters; i++)
+      CpuRelax();
+  }
+}
+\end{lstlisting}
 \paragraph{CLH Lock}
 CLH (Craig, Landin, and Hagersten lock) 是一个自旋锁, 能确保无饥饿性, 提供先来先服务的公平性.
 CLH 锁也是一种基于链表的可扩展, 高性能, 公平的自旋锁,
