@@ -1659,7 +1659,6 @@ load imbalance and global memory access overhead.
   \item degree-aware indices sorting and adjacency list compression~\cite{DBLP:conf/fpga/ZhangL18}
 \end{compactitem}
 
-
 \subsection{Synchronization}
 SSYNC~\cite{DBLP:conf/sosp/DavidGT13} claimed that
 ``good synchronization'' in software might \textbf{not scale as expected} due to hardware.
@@ -1703,7 +1702,36 @@ MESI supports the following states for a cache line:
   and other caches might have copies of the line;
   \item Invalid: the data are invalid.
 \end{compactitem}
+\subsubsection{Lock-Free Data Structure}
+\begin{lstlisting}
+class Node {
+  Node *next;
+  int data;
+}; 
 
+void push(int t) {
+  Node* node = new Node(t);
+
+  do {
+    node->next = head;
+  } while (!cas(&head, node, node->next));
+}
+
+bool pop(int& t) {
+  Node* current = head;
+
+  while(current) {
+    if(cas(&head, current->next, current)) {
+      t = current->data; // problem?
+      return true;
+    }
+
+    current = head;
+  }
+
+  return false;
+}
+\end{lstlisting}
 \subsubsection{Locks}
 等待获取锁的方式有 ``被动'' 和 ``主动'' 两种.
 被动模式指的是互相竞争的线程不再关心锁是否已经被释放,
