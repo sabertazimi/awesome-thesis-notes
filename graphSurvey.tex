@@ -1694,13 +1694,16 @@ It showed some useful conclusions:
 \subsubsection{MESI}
 MESI supports the following states for a cache line:
 \begin{compactitem}
-  \item Modified: the data are stale in the memory
+  \item modified: the data are stale in the memory
   and no other cache has a copy of this line;
-  \item Exclusive: the data are up-to-date in the memory
+  \item exclusive: the data are up-to-date in the memory
   and no other cache has a copy of this line;
-  \item Shared: the data are up-to-date in the memory
+  \item shared: the data are up-to-date in the memory
   and other caches might have copies of the line;
-  \item Invalid: the data are invalid.
+  \item invalid: the data are invalid;
+  \item forward: shared cache line (in L3 cache) designated to respond to any requrests,
+  which avoids redundant data transfers from other cores or memory;
+  \item owned: shared modified state which allows a dirty cache line to be shared.
 \end{compactitem}
 \subsubsection{Atomics}
 \begin{compactitem}
