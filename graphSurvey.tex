@@ -1706,12 +1706,21 @@ MESI supports the following states for a cache line:
   \item owned: shared modified state which allows a dirty cache line to be shared.
 \end{compactitem}
 \subsubsection{Atomics}
+Some insights proposed in Schweizer~\cite{DBLP:conf/IEEEpact/SchweizerBH15}:
 \begin{compactitem}
-  \item according to the common view, CAS is slower than FAA.
   \item the performance of atomics is similar on multi-socket systems
-  due to the overheads from socket-to-socket hops (dominant costs)
+  due to the overheads from socket-to-socket hops (dominant costs).
+  \item unsuccessful CASes invalidate the copies of fetched cache lines
+  entailing significant overheads.
+  Yet, such operations do not modify the fetched cache line,
+  making the invalidations unnecessary.
+  \item atomic operations cause the write buffers to be drained.
+  That means that every atomic is affecting the cache directly
+  without being merged or buffered.
+  \item atomics do not allow for ILP whatsoever.
+  \item lower bandwidth in a contended execution of atomic operations
+  than in a non-contended case.
 \end{compactitem}
-
 \subsubsection{Locks}
 等待获取锁的方式有 ``被动'' 和 ``主动'' 两种.
 被动模式指的是互相竞争的线程不再关心锁是否已经被释放,
