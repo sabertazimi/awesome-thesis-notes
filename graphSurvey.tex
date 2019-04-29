@@ -1702,6 +1702,13 @@ MESI supports the following states for a cache line:
   and other caches might have copies of the line;
   \item Invalid: the data are invalid.
 \end{compactitem}
+\subsubsection{Atomics}
+\begin{compactitem}
+  \item according to the common view, CAS is slower than FAA.
+  \item the performance of atomics is similar on multi-socket systems
+  due to the overheads from socket-to-socket hops (dominant costs)
+\end{compactitem}
+
 \subsubsection{Locks}
 等待获取锁的方式有 ``被动'' 和 ``主动'' 两种.
 被动模式指的是互相竞争的线程不再关心锁是否已经被释放,
