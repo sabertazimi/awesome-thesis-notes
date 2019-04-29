@@ -1702,36 +1702,6 @@ MESI supports the following states for a cache line:
   and other caches might have copies of the line;
   \item Invalid: the data are invalid.
 \end{compactitem}
-\subsubsection{Lock-Free Data Structure}
-\begin{lstlisting}
-class Node {
-  Node *next;
-  int data;
-}; 
-
-void push(int t) {
-  Node* node = new Node(t);
-
-  do {
-    node->next = head;
-  } while (!cas(&head, node, node->next));
-}
-
-bool pop(int& t) {
-  Node* current = head;
-
-  while(current) {
-    if(cas(&head, current->next, current)) {
-      t = current->data; // problem?
-      return true;
-    }
-
-    current = head;
-  }
-
-  return false;
-}
-\end{lstlisting}
 \subsubsection{Locks}
 等待获取锁的方式有 ``被动'' 和 ``主动'' 两种.
 被动模式指的是互相竞争的线程不再关心锁是否已经被释放,
@@ -1803,6 +1773,48 @@ CLH 锁也是一种基于链表的可扩展, 高性能, 公平的自旋锁,
 申请线程只在本地变量上自旋, 它不断轮询前驱的状态, 如果发现前驱释放了锁就结束自旋.
 相比于 Ticket Lock, 申请线程只在本地变量上自旋,
 从而极大地减少了不必要的处理器缓存同步的次数, 降低了总线和内存的开销.
+\subsubsection{Lock-Free Data Structure}
+Data structures are typically faster when synchronized exclusively
+with compare-and-swap than any other technique.
+The lock-free use of compare-and-swap makes
+the design of these data structures extremely difficult~\cite{DBLP:conf/ppopp/Gramoli15}.
+\begin{lstlisting}
+class Node {
+  Node *next;
+  int data;
+}; 
+
+void push(int t) {
+  Node* node = new Node(t);
+
+  do {
+    node->next = head;
+  } while (!cas(&head, node, node->next));
+}
+
+bool pop(int& t) {
+  Node* current = head;
+
+  while(current) {
+    if(cas(&head, current->next, current)) {
+      t = current->data; // problem?
+      return true;
+    }
+
+    current = head;
+  }
+
+  return false;
+}
+\end{lstlisting}
+\subsubsection{Copy-on-Write Based Structures}
+Copy-on-write-like techniques (e.g. read-copy-update)
+provide impressively high performance for read-only workloads
+but very low performance for update workloads.
+Software transactional memory,
+which is known to be badly-suited for heavily contended applications,
+may even handle conflicts more effectively than this technique
+(when only use copy-on-write without any optimizations)~\cite{DBLP:conf/ppopp/Gramoli15}.
 
 \subsection{Arbitrator} % (fold)
 \label{sub:arbitrator}
