@@ -1054,6 +1054,11 @@ PowerSwitch can quickly and efficiently switch execution modes.
 PowerSwitch incorporates throughput heuristics with online sampling
 to predict which execution mode will perform better currently.
 
+PowerSwitch constantly collects execution statistics
+like throughput, active vertices and convergence speed,
+and leverages online sampling, offline profiling and a set of heuristics
+to accurately predict optimal mode switch points.
+
 \subsection{Polymer}
 Polymer~\cite{DBLP:conf/ppopp/ZhangCC15} is implemented for
 single machines with scatter-gather processing model.
