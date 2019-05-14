@@ -1600,6 +1600,17 @@ Accessing different rows from one bank is slowest.
   \end{small}
 \end{table}
 
+\subsection{Memory Security}
+\subsubsection{Row Hammer}
+repeatedly opening and closing a row enough times within a refresh interval
+induces disturbance errors in adjacent rows in most real DRAM chips:
+\begin{compactitem}
+  \item DRAM cells are too close to each other (not electrically isolated from each other)
+  \item access to one cell affects the value in nearby cells due to electrical interference
+  \item induce bit flips in page table entries (PTEs) and gain read-write access to all of physical memory
+\end{compactitem}
+
+
 \subsection{Simulator}
 \subsubsection{DRAMSim2}
 \begin{compactitem}
@@ -1628,43 +1639,9 @@ by acting as a number of logical ports,
 each of which handles its transactions in order.
 
 % subsection HBM (end)
-
 \clearpage
 
-\section{DragonGraph}
-
-GPUs also face the drawbacks,
-e.g., control and memory divergence,
-load imbalance and global memory access overhead.
-
-\subsection{Basic Infrastructure}
-\begin{compactitem}
-  \item Enhanced/Redundant CSR.
-  \item vertex-centric.
-  \item GAS (sync).
-  \item push (locks) when few vertices discovered (early iterations).
-  \item pull (no locks) when many vertices discovered (late iterations).
-  \item no NUMA.
-  \item Verilog or Sdaccel.
-\end{compactitem}
-
-\subsection{Grpah Kernels or Grpah Benckmarks}
-\begin{compactitem}
-  \item SSSP.
-  \item CC.
-  \item best-first search.
-  \item uniform-cost search.
-  \item greedy-search.
-  \item A*.
-\end{compactitem}
-
-\subsection{Graph Representation}
-\begin{compactitem}
-  \item CSR + Interval + Shard (edge pointer in vertices array)~\cite{DBLP:conf/sbac-pad/ZhouP17}
-  \item degree-aware indices sorting and adjacency list compression~\cite{DBLP:conf/fpga/ZhangL18}
-\end{compactitem}
-
-\subsection{Synchronization}
+\section{Synchronization}
 SSYNC~\cite{DBLP:conf/sosp/DavidGT13} claimed that
 ``good synchronization'' in software might \textbf{not scale as expected} due to hardware.
 SSYNC provided a comprehensive analysis on two dimension:
@@ -1696,7 +1673,7 @@ It showed some useful conclusions:
   in most low contention workloads and some higher contention workloads.
   \item use of message passing for optimizing certain \textbf{highly contended} parts of a system.
 \end{compactitem}
-\subsubsection{MESI}
+\subsection{MESI}
 MESI supports the following states for a cache line:
 \begin{compactitem}
   \item modified: the data are stale in the memory
@@ -1710,7 +1687,7 @@ MESI supports the following states for a cache line:
   which avoids redundant data transfers from other cores or memory;
   \item owned: shared modified state which allows a dirty cache line to be shared.
 \end{compactitem}
-\subsubsection{Atomics}
+\subsection{Atomics}
 Some insights proposed in Schweizer~\cite{DBLP:conf/IEEEpact/SchweizerBH15}:
 \begin{compactitem}
   \item the performance of atomics is similar on multi-socket systems
@@ -1726,7 +1703,7 @@ Some insights proposed in Schweizer~\cite{DBLP:conf/IEEEpact/SchweizerBH15}:
   \item lower bandwidth in a contended execution of atomic operations
   than in a non-contended case.
 \end{compactitem}
-\subsubsection{Locks}
+\subsection{Locks}
 等待获取锁的方式有 ``被动'' 和 ``主动'' 两种.
 被动模式指的是互相竞争的线程不再关心锁是否已经被释放,
 而是让自身进入阻塞状态,
@@ -1797,7 +1774,7 @@ CLH 锁也是一种基于链表的可扩展, 高性能, 公平的自旋锁,
 申请线程只在本地变量上自旋, 它不断轮询前驱的状态, 如果发现前驱释放了锁就结束自旋.
 相比于 Ticket Lock, 申请线程只在本地变量上自旋,
 从而极大地减少了不必要的处理器缓存同步的次数, 降低了总线和内存的开销.
-\subsubsection{Lock-Free Data Structure}
+\subsection{Lock-Free Data Structure}
 Data structures are typically faster when synchronized exclusively
 with compare-and-swap than any other technique,
 which guarantees that one slow thread does not affect the overall system performance.
@@ -1832,7 +1809,7 @@ bool pop(int& t) {
   return false;
 }
 \end{lstlisting}
-\subsubsection{Copy-on-Write Based Structures}
+\subsection{Copy-on-Write Based Structures}
 Copy-on-write-like techniques (e.g. read-copy-update)
 provide impressively high performance for read-only workloads
 but very low performance for update workloads.
@@ -1840,6 +1817,39 @@ Software transactional memory,
 which is known to be badly-suited for heavily contended applications,
 may even handle conflicts more effectively than this technique
 (when only use copy-on-write without any optimizations)~\cite{DBLP:conf/ppopp/Gramoli15}.
+\clearpage
+
+\section{DragonGraph}
+GPUs also face the drawbacks,
+e.g., control and memory divergence,
+load imbalance and global memory access overhead.
+
+\subsection{Basic Infrastructure}
+\begin{compactitem}
+  \item Enhanced/Redundant CSR.
+  \item vertex-centric.
+  \item GAS (sync).
+  \item push (locks) when few vertices discovered (early iterations).
+  \item pull (no locks) when many vertices discovered (late iterations).
+  \item no NUMA.
+  \item Verilog or Sdaccel.
+\end{compactitem}
+
+\subsection{Grpah Kernels or Grpah Benckmarks}
+\begin{compactitem}
+  \item SSSP.
+  \item CC.
+  \item best-first search.
+  \item uniform-cost search.
+  \item greedy-search.
+  \item A*.
+\end{compactitem}
+
+\subsection{Graph Representation}
+\begin{compactitem}
+  \item CSR + Interval + Shard (edge pointer in vertices array)~\cite{DBLP:conf/sbac-pad/ZhouP17}
+  \item degree-aware indices sorting and adjacency list compression~\cite{DBLP:conf/fpga/ZhangL18}
+\end{compactitem}
 
 \subsection{Arbitrator} % (fold)
 \label{sub:arbitrator}
