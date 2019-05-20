@@ -1577,6 +1577,15 @@ Accessing different rows from one bank is slowest.
 来自 CPU 的请求以执行顺序进入 transaction queue,
 这些请求被转换为 DRAM 命令并放入 command queue.
 
+Commonly used scheduling policy (FR-FCFS):
+\begin{compactitem}
+  \item row hit first: serve row hit memory (address target to row buffer) accesses first.
+  Apps with high row buffer locality unfairly prioritize.
+  \item oldest first: then serve older accesses first
+  Memory-intensive applications unfairly prioritize.
+\end{compactitem}
+
+
 \subsection{Landscape of DRAM-based memory}
 \begin{table}
   \begin{small}
@@ -1663,7 +1672,7 @@ It showed some useful conclusions:
   \item synchronization crossing sockets is a performance killer.
   \item sharing within a socket is necessary but not sufficient
   due to hardware provide you with the expect expensive in any case.
-  Incomplete directory based AMD Opteron causes low localtiy
+  Incomplete directory based AMD Opteron causes low locality
   leading to inefficient intra-socket synchronization.
   \item Under high contention, single-sockets prevent performance collapse,
   whereas in the lower contention cases these platforms scale well.
@@ -1856,6 +1865,9 @@ load imbalance and global memory access overhead.
 \begin{compactitem}
   \item CSR + Interval + Shard (edge pointer in vertices array)~\cite{DBLP:conf/sbac-pad/ZhouP17}
   \item degree-aware indices sorting and adjacency list compression~\cite{DBLP:conf/fpga/ZhangL18}
+  \item Bitmap for frontier vertices and visited vertices.
+  Bitmap compression: two level bitmap~\cite{DBLP:conf/fpga/ZhangL18},
+  bloom filter.
 \end{compactitem}
 
 \subsection{Arbitrator} % (fold)
