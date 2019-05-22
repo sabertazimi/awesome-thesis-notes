@@ -283,6 +283,15 @@ Large-grain dataflow machines typically decouple the matching stage
 from the execution stage by use of FIFO-buffers. 
 Pipeline bubbles are avoided by the decoupling and FIFO-buffering. 
 
+\subsection{Out of Order Execution}
+Active/Instruction window size
+(determined by both scheduling window and reorder buffer size)
+limits the latency tolerance scalability of Tomasulo's algorithm.
+A out-of-order engine dynamically builds the dataflow graph of a piece of the program.
+
+Dataflow at the ISA level has not been successful,
+dataflow implementations under the hood have been very successful (e.g OoO execution).
+
 \clearpage
 
 \section{Pure Dtaflow Architecture}
