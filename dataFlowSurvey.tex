@@ -142,6 +142,22 @@ Dataflow architectures that are deterministic in nature
 enable programmers to manage complex tasks
 such as processor load balancing, synchronization and accesses to common resources.
 
+Pure dataflow has such advantages:
+\begin{compactitem}
+  \item very good at exploiting irregular parallelism
+  \item only real dependencies constrain processing
+  \item more parallelism can be exposed than von-Neumann model
+\end{compactitem}
+
+Pure dataflow has such disadvantages:
+\begin{compactitem}
+  \item no precise state semantics (hard to debug, hard to handle interrupt/exception)
+  \item too much parallelism (parallelism control needed)
+  \item high bookkeeping overhead (tag matching, data storage)
+\end{compactitem}
+
+
+
 The research, however, never overcame the problems related to:
 \begin{compactitem}
   \item Efficiently broadcasting data tokens in a massively parallel system;
