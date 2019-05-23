@@ -471,6 +471,8 @@ Asynchronous model addressed challenges of
 load balancing and long tail computation in the synchronous model.
 This approach is useful when the workload is imbalanced
 and \textit{convergence can occur faster} than synchronous approach.
+Async mode is designed for timely visibility of update,
+and emphasizes the fast convergence speed under sufficient hardware resources.
 
 The key disadvantage is that programming asynchronous processing systems
 is more difficult than synchronous systems.
@@ -480,10 +482,16 @@ and more complicated scheduling issues
 ~\cite{DBLP:journals/csur/HeidariSCB18}.
 
 Synchronous execution generally accommodates I/O-bound algorithms,
-while asynchronous execution well-serves CPU-bound algorithms.
+while asynchronous execution well-serves CPU-bound algorithms
+~\cite{DBLP:journals/csur/McCuneWM15}~\cite{DBLP:journals/csur/HeidariSCB18}.
+Sync mode prefers execution stages at which there are a large number of active vertices
+and provides better scalability with the increase of graph size.
+Async mode has better performance on the stage of execution with less amount and fewer degree of active vertices than those of Sync mode,
+and provides better scalability with the increase of machines
+Async mode does not work well under heavy workload due to potentially heavy lock contention
+~\cite{DBLP:conf/ppopp/XieCGZC15}.
 Such as PageRank, where vertices are ``always active'' so messaging is high,
 synchronous execution has been shown to significantly outperform asynchronous execution
-~\cite{DBLP:journals/csur/McCuneWM15}~\cite{DBLP:journals/csur/HeidariSCB18}.
 
 \subsection{Graph Partitioning}
 Given the common lack of structure of the computation,
