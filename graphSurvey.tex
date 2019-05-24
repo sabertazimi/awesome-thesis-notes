@@ -185,6 +185,18 @@ it serves to act as lower bound on performance.
 For small-world grpah, prefetching subsequent memory blocks does not always
 improve performance due to small neighborhoods~\cite{DBLP:journals/corr/abs-1903-06697}.
 
+For dynamic growing graphs, previous research found~\cite{DBLP:conf/kdd/LeskovecKF05}:
+\begin{compactitem}
+  \item densification power law: networks are becoming denser over time.
+  \item shrinking diameter: diameter is decreasing as the network grows.
+\end{compactitem}
+
+Useful graph generators:
+\begin{compactitem}
+  \item R-MAT Graphs
+  \item Kronecker Graphs~\cite{DBLP:journals/jmlr/LeskovecCKFG10}
+\end{compactitem}
+
 \subsection{Locality Benchmark}
 No executions sustain a high IPC and a high memory bandwidth
 (MLP, memory-level parallelism).
