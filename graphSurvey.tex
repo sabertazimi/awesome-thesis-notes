@@ -371,7 +371,7 @@ much less than the total number of edges.
 The system would better utilize processing while retaining scalability
 (Giraph++, Blogel)~\cite{DBLP:journals/csur/McCuneWM15}.
 
-In contrast to a vertex-centricmodel that hides partitioning
+In contrast to a vertex-centric model that hides partitioning
 and component connectivity details from users,
 a TLAV-based framework may face the problem of slow convergence 
 especially for large-diameter graphs.
@@ -902,6 +902,18 @@ GridGraph~\cite{DBLP:conf/usenix/ZhuHC15} 是以边为中心的核外单机图�
 \subsubsection{GridGraph Shortcoming}
 \begin{compactitem}
   \item 折线式的边 block 遍历策略不能达到最大化的Cache/Memory命中率.
+\end{compactitem}
+
+\subsection{Mosaic}
+Mosaic~\cite{DBLP:conf/eurosys/MaassMKKKK17}
+(likes FlashGraph) stores only vertices in memory.
+It uses hilbert order tiles organization to improve locality.
+It uses pull-reduce-apply model (edge-centric model).
+It uses Xeon Phi coprocessor for:
+\begin{compactitem}
+  \item Parallelize SSD access
+  \item Parallelize edge processing
+  \item Parallelize vertex processing
 \end{compactitem}
 
 \subsection{MapReduce}
