@@ -505,6 +505,10 @@ Async mode does not work well under heavy workload due to potentially heavy lock
 Such as PageRank, where vertices are ``always active'' so messaging is high,
 synchronous execution has been shown to significantly outperform asynchronous execution
 
+\subsection{Graph Compression}
+Using gaps - instead of storing the successors,
+store the differences between adjacent successors.
+
 \subsection{Graph Partitioning}
 Given the common lack of structure of the computation,
 it becomes very challenging to find the right graph partitioning strategy
@@ -553,6 +557,12 @@ The degree distribution is skewed,
 balancing the number of vertices in each partition does not guarantee workload balance.
 Therefore, for natural graphs (that have power-law degree distribution),
 vertex-cut partitioning (edge-centric) approach can obtain better workload balance.
+
+Balanced graph partitioning is challenging:
+\begin{compactitem}
+  \item fewer partitions => load imbalance => low parallelism
+  \item Over partitioning => higher duplication factor => more work
+\end{compactitem}
 
 \subsection{Communication Model}
 \subsubsection{Message Passing}
@@ -619,9 +629,6 @@ use push mode when few active vertices while use pull mode when many active vert
     \label{fig:everythinggraph2}
   \end{small}
 \end{figure}
-
-\subsection{Graph Compression}
-
 
 \subsection{Optimization}
 \subsubsection{Communication}
