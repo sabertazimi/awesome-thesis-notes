@@ -620,6 +620,9 @@ use push mode when few active vertices while use pull mode when many active vert
   \end{small}
 \end{figure}
 
+\subsection{Graph Compression}
+
+
 \subsection{Optimization}
 \subsubsection{Communication}
 \begin{compactitem}
@@ -812,7 +815,7 @@ the abstractions of edge maps and vertex maps
 with scatter-gather processing model.
 When applying these map functions,
 Ligra uses heuristics to determine in
-which direction to apply them (push or pull)
+which direction to apply them (push/pull for sparse/dense EdgeMap)~\cite{DBLP:conf/sc/BeamerAP12}
 and what data structures to use (sparse or dense).
 These optimizations make Ligra especially well suited for low-diameter graphs.
 
