@@ -1945,6 +1945,25 @@ and the system is halted.
 
 \clearpage
 
+\section{FPGA Programming}
+\subsection{Testing and Debugging}
+SystemVerilog 是业界使用较广泛的验证语言,
+同时也衍生出了一系列专业的验证方法学 (如 UVM).
+因此在测试平台的编写上建议使用 SV,
+而非 Verilog 或 SystemC.
+
+Direct Programming Interface (DPI) 是一种非常简单的方式
+来连接 C/C++ 或者其他非 Verilog 编程语言.
+一旦声明或用 import 导入了一个 C 子程序,
+就可以像调用 SV 中的子程序调用该子程序.
+DPI 最大的意义在于可以轻松的使用其他成熟的模拟器 (如 DRAMSim2/GEM5)
+来极大的降低 verilog 仿真时间.
+例如, 如果使用 Xilinx MIG 产生的 ddr3 module 进行仿真, 10min 大概仿真 0.07ms;
+而使用 DRAMSim2 处理整个 trace 可能仅需几秒钟.
+
+\clearpage
+
+
 \bibliographystyle{unsrt}
 \bibliography{bibs/graph}
 \addcontentsline{toc}{section}{References}
