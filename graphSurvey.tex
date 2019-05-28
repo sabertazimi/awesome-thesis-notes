@@ -1957,6 +1957,32 @@ While this condition holds, the PE signals inactivity.
 If all PEs signal inactivity simultaneously,
 no messages at all were sent in the previous superstep,
 and the system is halted.
+\subsubsection{Lock Free and Coalesced Messages}
+分配一组消费者, 每个消费者负责一定区域的内存缓冲, 形成 lock-free 的顶点信息更新操作.
+
+每个节点第⼀步与同⾏的节点通信, 第⼆步与同列的节点通信, 这两步都实现了消息的聚合.
+第⼀步, 源节点会把发往同⼀个组的消息放在同⼀个发送缓冲中, 分批发给转发节点.
+转发节点收到聚合过的消息后, 进⾏⼀次再分类, 将数据放到组内的缓存区中,
+第⼆步发送是转发节点到⽬标节点, 消息同样是聚合过的.
+
+如果在 Frontier 中的点很多, 则采⽤位图来标记是否在 Frontier 中这⼀信息.
+反之, 如果在 Frontier 中的点很少, 这直接发送在 Frontier 中的点的队列.
+
+\subsection{Graph Reordering and Partitioning}
+对于 CSR, 将所有顶点按照度数从大到小排列, 并去除度数为 0 的顶点.
+
+对⼦区域边数排序, 先将边数最多的 $n$ 个⼦区域分给 $n$ 个节点.
+按照贪⼼策略将剩余的 $15 * n$ 个⼦区域合到 $n$ 个节点上.
+限制前 $k$ 个节点的边数总和不大于 $k \times m_{avg}$,
+依次将⼦区域映射到节点上, 得到⼦区域和节点的映射关系.
+
+⾼出度边, 其源顶点为⾼出度顶点, ⽬标顶点的度数不做限制;
+⾼⼊度边, 其源顶点为低低出度顶点, ⽬标顶点为⾼⼊度顶点;
+低度边, 即剩余的所有边, 其源顶点和⽬标顶点均为低度数.
+通过映射关系将⾼⼊度边和低度边发送到源节点, ⾼出度边发送到⽬标节点.
+高入度边和高出度边采取顶点镜像的方式减少远端通信量,
+将大量的 EdgeMsg 通信变为少量的 VtxMsg 通信, 再由镜像顶点向本地发送进一步消息.
+
 % subsection Arbitrator (end)
 
 \clearpage
