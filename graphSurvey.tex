@@ -719,15 +719,14 @@ to implement on graph accelerators for the sophisticated hardware design.
 图计算特点:
 \begin{compactitem}
   \item 规模巨大.
-  \item 局部性差.
-  \item 耦合性强.
+  \item 访存密集 (intensive data access):
+  most of the operations in graph processing are related to data accesses.
+  \item 随机访存 (poor locality): high memory access overhead.
+  \item 数据耦合 (high data dependency): make it difficult to
+  explore the parallelism and prefetch data.
+  \item 非结构化 (irregular computation): poor workloads balance (power-law distribution).
   \item 数据可能动态变化.
   \item 计算过程频繁迭代.
-  \item intensive data access:
-  most of the operations in graph processing are related to data accesses.
-  \item irregular computation: poor workloads balance (power-law distribution).
-  \item poor locality: high memory access overhead.
-  \item high data dependency: make it difficult to explore the parallelism.
 \end{compactitem}
 
 高能效的大规模图计算
@@ -1012,8 +1011,8 @@ due to communication overheads.
 
 \subsection{PowerGraph}
 PowerGraph~\cite{DBLP:conf/osdi/GonzalezLGBG12}
-基于 GraphLab, 利用``长尾''现象来优化子图划分,
-尽可能地实现负载均衡和最小化通信与存储开销.
+基于 GAS 模式 (Pull to Dest, Apply to Dest, Backward to Src),
+利用``长尾''现象来优化子图划分, 尽可能地实现负载均衡和最小化通信与存储开销.
 其提出了顶点分割 (vertex-cut) 方案, 即对于度较高的顶点进行分割,
 分割开来的边被放置到不同的节点, 每个节点只需要维护被分割的顶点的镜像.
 Consistency across cached mirrors of the cut vertex
@@ -1105,8 +1104,25 @@ and leverages online sampling, offline profiling and a set of heuristics
 to accurately predict optimal mode switch points.
 
 \subsection{Polymer}
-Polymer~\cite{DBLP:conf/ppopp/ZhangCC15} is implemented for
-single machines with scatter-gather processing model.
+Polymer~\cite{DBLP:conf/ppopp/ZhangCC15}
+is implemented for NUMA machines based on
+Ligra~\cite{DBLP:conf/ppopp/ShunB13} processing model.
+One approach is co-locating all edges with its source vertices to a single node.
+However, this will lead to excessive random remote accesses
+of application-defined data (such as rank) and runtime states.
+Hence, Polymer only co-locates edges with their target vertices in a NUMA node in the push mode.
+All other application-defined data and runtime states are stored together with its owning vertices.
+
+对于度数较⼩的顶点, 其边的信息存在源顶点所在的节点上;
+⽽对于度数较⼤的顶点, 其边的信息存到⽬标顶点所在的节点上.
+在做 Top-Down 计算的时候, 只要⼴播哪些⼤点在当前层的 Frontier 这个信息,
+就不再需要传输边了, 剩下的计算可以在本地完成.
+这样处理有如下优点:
+\begin{compactitem}
+  \item ⼩点的边集中存储, 便于快速处理
+  \item ⼤点的边分散存储, 解决了负载均衡问题
+  \item ⼤点虽然多了⼀步把数据发送到镜像, 但是由于⼤点数⽬较少, 并不会产⽣⼤量额外的开销
+\end{compactitem}
 
 \subsection{Gemini}
 Gemini~\cite{DBLP:conf/osdi/ZhuCZM16} major optimizations:
