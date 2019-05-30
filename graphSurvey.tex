@@ -721,9 +721,12 @@ to implement on graph accelerators for the sophisticated hardware design.
   \item 规模巨大.
   \item 访存密集 (intensive data access):
   most of the operations in graph processing are related to data accesses.
-  \item 随机访存 (poor locality): high memory access overhead.
+  \item 随机访存 (poor locality): high memory access overhead,
+  the high cache miss rates of graph processing make serial semantic a severe problem.
+  The predictors of modern processors can hardly provide satisfied performance for graph applications
+  The \textit{if} branch is complex because the condition result depends on specific graph structures.
   \item 数据耦合 (high data dependency): make it difficult to
-  explore the parallelism and prefetch data.
+  explore the parallelism and prefetch data (low ILP and DLP).
   \item 非结构化 (irregular computation): poor workloads balance (power-law distribution).
   \item 数据可能动态变化.
   \item 计算过程频繁迭代.
@@ -1402,7 +1405,21 @@ An architecture that consists of many lightweight multi-threaded processing engi
 a global transactional shared memory, and a work scheduler~\cite{DBLP:conf/fpga/MaZC17}.
 
 \subsection{Dataflow Accelerator}
-Dataflow accelerator~\cite{DBLP:conf/icdcs/JinYLZL17}~\cite{DBLP:conf/IEEEpact/Yao0L0H18}
+As Yao~\cite{DBLP:conf/icdcs/JinYLZL17} mentioned,
+low ILP resulting from heavy dependencies,
+serial semantic in instruction stream,
+and high branch misprediction caused by complex
+branch instructions are the major reasons responsible
+for the inefficiencies inside core towards graph applications.
+
+Dataflow could provide high parallelism by
+removing redundant dependencies (like control dependencies) and serial semantic,
+and could provide an opportunity to reduce the misprediction costs.
+Just because of the pros of dataflow paradigm
+in the fundamental enhancement on ILP and branch prediction for graph processing,
+applying a dataflow approach in graph processing is useful.
+
+Dataflow accelerator~\cite{DBLP:conf/IEEEpact/Yao0L0H18}.
 
 \subsection{FabGraph}
 FabGraph~\cite{DBLP:conf/fpga/ShaoLHL019}
