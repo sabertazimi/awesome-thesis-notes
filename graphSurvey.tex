@@ -1198,11 +1198,20 @@ which is common in graphs with varying degrees
 
 As GraphBIG~\cite{DBLP:conf/sc/NaiXTKL15} mentioned,
 it is a common intuition that irregular data accesses
-are the major source of inefficiencies of graph computing.
-Instruction fetch and branch prediction
-are usually the key inefficiency sources.
-a large number of ICache misses or branch miss predictions
-can significantly affect architectural performance.
+are the major source of inefficiencies of graph computing:
+\begin{compactitem}
+  \item instruction fetch and branch prediction
+  are usually the key inefficiency sources.
+  a large number of ICache misses or branch miss predictions
+  can significantly affect architectural performance
+  (modern processors usually don’t incorporate efficient techniques
+  to hide ICache/branch re- lated penalties).
+  \item although typically DTLB (data TLB) is not an issue for conventional applications,
+  it is a significant source of inefficiencies for graph computing.
+  A high DTLB miss penalty is observed because of
+  the large memory footprint and low page locality.
+\end{compactitem}
+
 
 FPGA 比 CPU 和 GPU 能效高, 体系结构上的根本优势是无指令, 无需共享内存.
 缺少指令同时是 FPGA 的优势和软肋. 每做一点不同的事情, 就要占用一定的 FPGA 逻辑资源.
