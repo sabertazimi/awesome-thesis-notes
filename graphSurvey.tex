@@ -1419,7 +1419,12 @@ Just because of the pros of dataflow paradigm
 in the fundamental enhancement on ILP and branch prediction for graph processing,
 applying a dataflow approach in graph processing is useful.
 
-Dataflow accelerator~\cite{DBLP:conf/IEEEpact/Yao0L0H18}.
+AccuGraph~\cite{DBLP:conf/IEEEpact/Yao0L0H18}
+is a novel graph-specific accelerator
+that can simultaneously process atomic vertex updates for massive parallelism
+while ensuring the correctness.
+A parallel accumulator is designed to remove the serialization in atomic protections
+for conflicting vertex updates through merging their results in parallel.
 
 \subsection{FabGraph}
 FabGraph~\cite{DBLP:conf/fpga/ShaoLHL019}
