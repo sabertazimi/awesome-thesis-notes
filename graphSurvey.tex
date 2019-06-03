@@ -1595,13 +1595,21 @@ Graphicionado~\cite{DBLP:conf/micro/HamWSSM16}
 其建立了片上存储用于存储顶点信息, 同时降低访存粒度, 设计硬件专用流水线进行图计算.
 
 \subsection{GraphPIM}
+By offload the atomic operations on the graph property to the PIM side,
 GraphPIM~\cite{DBLP:conf/hpca/NaiHSKKK17}
+avoids the overhead of performing the atomic operations in the host processor
+and the inefficient utilization of the memory subsystem caused by \textit{irregular data accesses}.
 
 \subsection{GraphR}
 GraphR~\cite{DBLP:conf/hpca/SongZQLC18}
+is the first ReRAM-based graph processing accelerator.
+The core graph computations are performed in sparse matrix format in GEs (ReRAM crossbars).
 
 \subsection{GraphP}
 GraphP~\cite{DBLP:conf/hpca/ZhangZWGWCKQ18}
+takes source-cut graph partition and two-phase vertex model,
+reduces inter-cube communication compare to
+Tesseract~\cite{DBLP:conf/isca/AhnHYMC15} and GraphPIM~\cite{DBLP:conf/hpca/NaiHSKKK17}.
 
 \clearpage
 
@@ -1728,6 +1736,8 @@ some potential solutions:
 \end{compactitem}
 
 \subsection{Simulator}
+\subsubsection{MacSim}
+\href{https://github.com/gthparch/macsim}{SST + MacSim}
 \subsubsection{DRAMSim2}
 \begin{compactitem}
   \item \textit{AddressMapping.cpp}: 物理地址到内存 (rank/bank/row/col/offset) 的映射关系.
