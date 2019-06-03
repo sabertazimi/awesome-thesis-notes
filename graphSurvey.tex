@@ -1982,6 +1982,14 @@ load imbalance and global memory access overhead.
 
 \subsection{Arbitrator} % (fold)
 \label{sub:arbitrator}
+\subsubsection{Stall Scheme}
+EEAGAA~\cite{DBLP:conf/isca/OzdalYKAGBO16} 采用以顶点为中心计算模式,
+并采用行压缩 (CSR) 格式来表示图数据, 在执行图算法时, 遵循 GAS 模型, 并支持异步执行模式.
+其内部包括同步部件 (RAW and WAR Detector).
+\subsubsection{Reduce Scheme}
+AccuGraph~\cite{DBLP:conf/IEEEpact/Yao0L0H18}
+designed a parallel accumulator to remove the serialization in atomic protections
+for conflicting vertex updates through merging their results in parallel.
 \subsubsection{Sorting Scheme}
 Sort the edges by destination vertices, find minimal value easily in the sorting block,
 thus reducing the number of updates that have to be written to DRAM.
