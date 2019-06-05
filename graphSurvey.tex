@@ -1600,6 +1600,9 @@ GraphPIM~\cite{DBLP:conf/hpca/NaiHSKKK17}
 avoids the overhead of performing the atomic operations in the host processor
 and the inefficient utilization of the memory subsystem caused by \textit{irregular data accesses}.
 
+However, it needs to incorporate with specialized memory architecture
+and also increases the memory requests since all atomic operations need to be sent to the memory.
+
 \subsection{GraphR}
 GraphR~\cite{DBLP:conf/hpca/SongZQLC18}
 is the first ReRAM-based graph processing accelerator.
