@@ -1404,7 +1404,7 @@ where the highest compression rates are obtained for web graphs.
 An architecture that consists of many lightweight multi-threaded processing engines,
 a global transactional shared memory, and a work scheduler~\cite{DBLP:conf/fpga/MaZC17}.
 
-\subsection{Dataflow Accelerator}
+\subsection{AccuGraph}
 As Yao~\cite{DBLP:conf/icdcs/JinYLZL17} mentioned,
 low ILP resulting from heavy dependencies,
 serial semantic in instruction stream,
@@ -1423,7 +1423,12 @@ AccuGraph~\cite{DBLP:conf/IEEEpact/Yao0L0H18}
 is a novel graph-specific accelerator
 that can simultaneously process atomic vertex updates for massive parallelism
 while ensuring the correctness.
-A parallel accumulator is designed to remove the serialization in atomic protections
+Based on simple and repeated atomic operations following the commutative and associative law,
+trying to tackle sparse power-law graphs
+(low parallelism fow low-degree vertices
+and high synchronization overheads for high-degree vertices)
+and random access to vertices and edges,
+a \textit{parallel accumulator} is designed to remove the serialization in atomic protections
 for conflicting vertex updates through merging their results in parallel.
 
 \subsection{FabGraph}
