@@ -707,7 +707,7 @@ Asynchronous mode requires tremendous efforts
 to implement on graph accelerators for the sophisticated hardware design.
 \clearpage
 
-\section{Graph Processing System}
+\section{CPU Graph Processing System}
 图计算框架核心问题:
 \begin{compactitem}
   \item 任务划分与映射机制: TLP/DLP + mapping (programming/compiler/runtime).
@@ -1177,11 +1177,11 @@ Gemini design a co-scheduling mechanism to
 overlap computation and inter-node communication tasks.
 \clearpage
 
-\section{GPU}
+\section{GPU Graph Processing System}
 BFS on GPU~\cite{DBLP:conf/sc/LiuH15}
 \clearpage
 
-\section{FPGA}
+\section{FPGA Graph Processing System}
 \begin{compactitem}
   \item cpu 通用.
   \item gpu 高吞吐量.
@@ -1447,6 +1447,19 @@ All vertex caches use BRAM.
 FabGraph use 2 pipeline sets to overlap
 communication and computation,
 enhancing bandwidth of graph progressing.
+
+\subsection{Convey HC-1}
+This system~\cite{DBLP:conf/asap/BetkaouiWTL12}
+decouples computation and communication
+while keeping multiple memory requests in flight at any given time.
+The performance increases as the graph size increases
+in terms of vertex count and average vertex degree.
+In contrast, the BFS performance of cache-based systems,
+tends to decrease as the graph size is scaled up
+due to the increased rate of last-level cache misses.
+It shows that the CPU-based systems try to hide memory latency using cache memories,
+which is ineffective for random and irregular memory access patterns.
+
 \subsection{CyGraph}
 CyGraph~\cite{DBLP:conf/ipps/AttiaJTJZ14}
 targets to BFS algorithm:
