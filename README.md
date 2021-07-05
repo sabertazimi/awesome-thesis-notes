@@ -1,3 +1,3 @@
-# awesome-thesis-notes
+# survey
 
 Reading Notes
